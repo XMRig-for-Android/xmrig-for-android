@@ -1,0 +1,37 @@
+name: Build XMRig APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git wget unzip ninja-build pkg-config libtool autoconf automake cmake build-essential
+        sudo apt-get install -y android-sdk android-sdk-platform-tools
+
+    - name: Clone XMRig-for-Android
+      run: |
+        git submodule update --init --recursive
+
+    - name: Build XMRig for Android
+      run: |
+        ./build-release.sh
+
+    - name: Upload built APK
+      uses: actions/upload-artifact@v2
+      with:
+        name: xmrig-android-apk
+        path: ./output/*.apk
