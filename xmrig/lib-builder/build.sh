@@ -222,6 +222,11 @@ build_xmrig_variant() {
   sed -i.bak 's/pthread rt dl log/dl/g' "$src_dir/CMakeLists.txt"
   rm -f "$src_dir/CMakeLists.txt.bak"
 
+  if [ -f "$src_dir/src/crypto/flex/flex_keccak.c" ]; then
+    sed -i.bak -e 's/flex_u32/sph_u32/g' -e 's/flex_enc32le_aligned/sph_enc32le_aligned/g' "$src_dir/src/crypto/flex/flex_keccak.c"
+    rm -f "$src_dir/src/crypto/flex/flex_keccak.c.bak"
+  fi
+
   for abi in $ABIS; do
     set_abi_vars "$abi"
     local build_dir="$src_dir/build/$abi"

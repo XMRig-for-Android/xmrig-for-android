@@ -1,6 +1,7 @@
 .PHONY: all toolchain libuv hwloc openssl xmrig xmrig-mo install clean
 
-all: clean install
+all:
+	./build.sh all
 
 toolchain:
 	./build.sh toolchain
