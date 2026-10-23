@@ -4,6 +4,7 @@ import {
   Button, Chip, Colors, Incubator, Picker, Typography, View,
 } from 'react-native-ui-lib';
 import { IConfiguratioPropertiesPool } from '../../../core/settings/settings.interface';
+import { validateWalletAddress } from '../../../core/utils';
 import {
   C3Pool,
   Hashcity,
@@ -72,9 +73,7 @@ const PoolListModal:React.FC<PoolListModalProps> = (
       onDismiss={onDismiss}
       center
       headerProps={{
-        text: {
-          title: 'Pools Presets',
-        },
+        title: 'Pools Presets',
       }}
       containerStyle={{ width: '100%', minWidth: 300 }}
       // eslint-disable-next-line react/jsx-props-no-spreading
@@ -84,7 +83,7 @@ const PoolListModal:React.FC<PoolListModalProps> = (
         <View paddingH-20>
           <View height={50} paddingT-10>
             <Picker
-              floatingPlaceholder={selected === null}
+              floatingPlaceholder={selected == null}
               placeholder="Select a Pool"
               topBarProps={{ title: 'Pools' }}
               value={selected}
@@ -93,8 +92,6 @@ const PoolListModal:React.FC<PoolListModalProps> = (
               onChange={(value: any) => setSelected(value)}
               style={{ ...Typography.text60, color: Colors.$textDefault }}
               floatingPlaceholderStyle={{ ...Typography.text70, color: Colors.$textDefault }}
-              migrate
-              migrateTextField
             >
               {_.map(pools, (item: IPredefinedPool) => (
                 <Picker.Item
@@ -138,6 +135,12 @@ const PoolListModal:React.FC<PoolListModalProps> = (
           <View height={1.5} bg-grey70 />
           <View paddingV-15 paddingH-20 right row centerV>
             <Button
+              disabled={
+                !selected
+                || !pool.hostname
+                || !pool.port
+                || !validateWalletAddress(pool.username)
+              }
               onPress={() => hide(true)}
               marginR-10
               label="Save"

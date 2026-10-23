@@ -1,4 +1,5 @@
-import { merge } from 'lodash/fp';
+import isEqual from 'lodash/fp/isEqual';
+import merge from 'lodash/fp/merge';
 import React from 'react';
 import { ScrollView } from 'react-native';
 import {
@@ -25,18 +26,18 @@ const actionsButtonDefault: ButtonProps = {
 const SettingsScreen: React.FC = () => {
   const { settings, settingsDispatcher } = React.useContext(SettingsContext);
 
-  const [localSettings, setLocalSettings] = React.useState<ISettings>({ ...settings });
-  React.useEffect(() => setLocalSettings({ ...settings }), []);
+  const [localSettings, setLocalSettings] = React.useState<ISettings>(settings);
+  const skipSettingsCompare = React.useRef(true);
 
   const [changesCount, setChangesCount] = React.useState<number>(0);
 
   React.useEffect(() => {
-    if (localSettings !== settings) {
-      setChangesCount((val) => val + 1);
-    } else {
-      setChangesCount(0);
+    if (skipSettingsCompare.current) {
+      skipSettingsCompare.current = false;
+      return;
     }
-  }, [localSettings]);
+    setChangesCount(isEqual(localSettings, settings) ? 0 : 1);
+  }, [localSettings, settings]);
 
   const handleUpdate = (data: Partial<ISettings>) => {
     settingsDispatcher({
@@ -68,11 +69,6 @@ const SettingsScreen: React.FC = () => {
   React.useEffect(() => {
     if (actionsVisible) {
       setActionButtonProps({
-        ...actionsButtonDefault,
-        backgroundColor: Colors.$backgroundPrimaryHeavy,
-      });
-    } else {
-      setActionButtonProps({
         iconSource: Assets.icons.barsClose,
         iconStyle: {
           width: 15,
@@ -80,6 +76,11 @@ const SettingsScreen: React.FC = () => {
           margin: 8,
           tintColor: Colors.$iconDefaultLight,
         },
+        backgroundColor: Colors.$backgroundPrimaryHeavy,
+      });
+    } else {
+      setActionButtonProps({
+        ...actionsButtonDefault,
         backgroundColor: Colors.$backgroundPrimaryHeavy,
       });
     }

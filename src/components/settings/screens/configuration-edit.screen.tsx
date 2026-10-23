@@ -1,8 +1,12 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
+import {
+  NavigationProp, RouteProp, useNavigation, useRoute,
+} from '@react-navigation/native';
+import isEqual from 'lodash/fp/isEqual';
 import React, { Suspense } from 'react';
 import {
   Assets, Button, ButtonProps, Colors, FloatingButton, LoaderScreen, Text, View,
 } from 'react-native-ui-lib';
+import { RootStackParamList } from '../../../core/navigation';
 import { SettingsActionType, SettingsContext } from '../../../core/settings';
 import { Configuration, ConfigurationMode } from '../../../core/settings/settings.interface';
 
@@ -21,14 +25,14 @@ const actionsButtonDefault: ButtonProps = {
 };
 
 const ConfigurationEditScreen = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootStackParamList, 'Configuration'>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const [changesCount, setChangesCount] = React.useState<number>(0);
 
   const { settings, settingsDispatcher } = React.useContext(SettingsContext);
   const savedConfiguration = React.useMemo(() => settings.configurations.find(
-    (item) => item.id === (route.params as any).id,
+    (item) => item.id === route.params?.id,
   ), [settings.configurations]);
   const [configuration, setConfiguration] = React.useState<Configuration>();
   React.useEffect(() => {
@@ -36,12 +40,12 @@ const ConfigurationEditScreen = () => {
   }, [route.params]);
 
   React.useEffect(() => {
-    if (configuration !== savedConfiguration) {
-      setChangesCount((val) => val + 1);
-    } else {
+    if (!configuration || !savedConfiguration) {
       setChangesCount(0);
+      return;
     }
-  }, [configuration]);
+    setChangesCount(isEqual(configuration, savedConfiguration) ? 0 : 1);
+  }, [configuration, savedConfiguration]);
 
   const handleUpdate = (data: Configuration) => {
     settingsDispatcher({
@@ -58,10 +62,6 @@ const ConfigurationEditScreen = () => {
   React.useEffect(() => {
     if (actionsVisible) {
       setActionButtonProps({
-        ...actionsButtonDefault,
-      });
-    } else {
-      setActionButtonProps({
         iconSource: Assets.icons.barsClose,
         iconStyle: {
           width: 15,
@@ -69,6 +69,10 @@ const ConfigurationEditScreen = () => {
           margin: 8,
           tintColor: Colors.$iconDefaultLight,
         },
+      });
+    } else {
+      setActionButtonProps({
+        ...actionsButtonDefault,
       });
     }
   }, [actionsVisible]);
@@ -161,6 +165,7 @@ const ConfigurationEditScreen = () => {
               });
             }
             setActionVisible(false);
+            navigation.goBack();
           },
           backgroundColor: Colors.$backgroundDangerHeavy,
           link: false,

@@ -31,12 +31,6 @@ const ConfigurationsScreen: React.FC = () => {
   React.useEffect(() => {
     if (actionsVisible) {
       setActionButtonProps({
-        ...actionsButtonDefault,
-        backgroundColor: selected.length > 0
-          ? Colors.$backgroundDangerHeavy : Colors.$backgroundPrimaryHeavy,
-      });
-    } else {
-      setActionButtonProps({
         iconSource: Assets.icons.barsClose,
         iconStyle: {
           width: 15,
@@ -44,6 +38,12 @@ const ConfigurationsScreen: React.FC = () => {
           margin: 8,
           tintColor: Colors.$iconDefaultLight,
         },
+        backgroundColor: selected.length > 0
+          ? Colors.$backgroundDangerHeavy : Colors.$backgroundPrimaryHeavy,
+      });
+    } else {
+      setActionButtonProps({
+        ...actionsButtonDefault,
         backgroundColor: selected.length > 0
           ? Colors.$backgroundDangerHeavy : Colors.$backgroundPrimaryHeavy,
       });
@@ -121,6 +121,7 @@ const ConfigurationsScreen: React.FC = () => {
               type: SettingsActionType.DELETE_CONFIGURATIONS,
               value: selected,
             });
+            setSelected([]);
             setActionVisible(false);
           },
           backgroundColor: Colors.$backgroundDangerHeavy,

@@ -13,7 +13,7 @@ type PowerContextType = {
 // @ts-ignore
 export const PowerContext:React.Context<PowerContextType> = React.createContext();
 
-export const PowerContextProvider:React.FC = ({ children }) => {
+export const PowerContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [batteryLevel, setBatteryLevel] = React.useState<number>(0);
   const [isLowBattery, setIsLowBattery] = React.useState<boolean>(false);
   const [isPowerConnected, setIsPowerConnected] = React.useState<boolean>(false);
@@ -25,7 +25,7 @@ export const PowerContextProvider:React.FC = ({ children }) => {
       console.log(event);
       switch (event.action) {
         case PowerEventAction.BATTERY_CHANGED:
-          if (event.value) {
+          if (event.value != null) {
             setBatteryLevel(event.value);
           }
           break;

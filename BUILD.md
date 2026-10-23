@@ -1,15 +1,15 @@
 # Build XMRig for Android
 
 ## Prerequisites
-* NodeJS v17.1.0
+* NodeJS v22.17.0 (see `.nvmrc`)
+* JDK 17
 * [React Native Development Enviroment](https://reactnative.dev/docs/environment-setup)
 * Android Studio
-* Android 10 SDK 29
-* Android SDK Build Tools 29.0.2
-* Android NDK 23.0.7599858
-* Android SDK Command-line Tools 5.0
-* Android SDK Platform-Tools 31.0.3
-* CMake
+* Android SDK 35
+* Android SDK Build Tools 35.0.0
+* Android NDK 27.0.12077973
+* CMake 3.22 or newer
+* Python 3, `autoconf`, `automake`, and `libtool` (needed when building hwloc from git)
 
 ## Build XMRig
 This script will compile hwloc, libuv and xmrig for each ABI. The execuable will be copied to `jniLibs` folder in android project.

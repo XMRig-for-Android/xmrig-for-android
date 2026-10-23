@@ -21,27 +21,27 @@ jobs:
     steps:
     - uses: actions/setup-python@v2
       with:
-        python-version: '2.x'
+        python-version: '3.x'
         architecture: 'x64'
     - uses: nttld/setup-ndk@v1.0.6
       with:
-        ndk-version: r21e
+        ndk-version: 27.0.12077973
     - uses: actions/checkout@v2
     
     - name: Get version
       uses: KageKirin/get-node-package-version@v0
       id: package_version
     
-    - name: Set up JDK 11
+    - name: Set up JDK 17
       uses: actions/setup-java@v2
       with:
         distribution: 'adopt'
-        java-version: '11'
+        java-version: '17'
         cache: 'gradle'
         
     - uses: actions/setup-node@v2
       with:
-        node-version: '17.1.0'
+        node-version: '22.17.0'
         cache: 'yarn'
         
     - name: Bump version

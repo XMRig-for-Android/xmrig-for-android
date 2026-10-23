@@ -12,7 +12,7 @@ import {
   ButtonProps,
 } from 'react-native-ui-lib';
 import Anser from 'anser';
-import Clipboard from '@react-native-community/clipboard';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { XMRigLogView } from '../../containers/xmrig-log';
 import { ILoggerLine, LoggerActionType, LoggerContext } from '../../../../core/logger';
 import { useToaster } from '../../../../core/hooks/use-toaster/use-toaster.hook';
@@ -35,6 +35,7 @@ const LogScreen:React.FC<ViewProps> = () => {
   const copyToClipboard = () => {
     Clipboard.setString(
       loggerState
+        .slice(-100)
         .map((item: ILoggerLine) => `${item.ts} ${Anser.ansiToText(item.message)}`)
         .join('\n'),
     );
@@ -57,8 +58,6 @@ const LogScreen:React.FC<ViewProps> = () => {
   const [actionsButtonProps, setActionButtonProps] = React.useState<ButtonProps>({});
   React.useEffect(() => {
     if (actionsVisible) {
-      setActionButtonProps(actionsButtonDefault);
-    } else {
       setActionButtonProps({
         iconSource: Assets.icons.barsClose,
         iconStyle: {
@@ -68,6 +67,8 @@ const LogScreen:React.FC<ViewProps> = () => {
           tintColor: Colors.$iconDefaultLight,
         },
       });
+    } else {
+      setActionButtonProps(actionsButtonDefault);
     }
   }, [actionsVisible]);
 

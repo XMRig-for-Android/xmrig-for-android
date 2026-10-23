@@ -4,19 +4,22 @@ import android.app.Application;
 
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
+import com.facebook.react.ReactHost;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
+import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
+import com.facebook.react.defaults.DefaultReactHost;
+import com.facebook.react.defaults.DefaultReactNativeHost;
+import com.facebook.react.soloader.OpenSourceMergedSoMapping;
 import com.facebook.soloader.SoLoader;
 
-import com.facebook.react.bridge.JSIModulePackage;
-import com.swmansion.reanimated.ReanimatedJSIModulePackage;
-
+import java.io.IOException;
 import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
 
   private final ReactNativeHost mReactNativeHost =
-      new ReactNativeHost(this) {
+      new DefaultReactNativeHost(this) {
         @Override
         public boolean getUseDeveloperSupport() {
           return BuildConfig.DEBUG;
@@ -24,14 +27,8 @@ public class MainApplication extends Application implements ReactApplication {
 
         @Override
         protected List<ReactPackage> getPackages() {
-          @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
           packages.add(new XMRigForAndroidPackage());
-          //packages.add(new RNCWebViewPackage());
-          //  packages.add(new SplashScreenReactPackage());
-          // Packages that cannot be autolinked yet can be added manually here, for example:
-          // packages.add(new MyReactNativePackage());
-
           return packages;
         }
 
@@ -40,9 +37,14 @@ public class MainApplication extends Application implements ReactApplication {
           return "index";
         }
 
-      @Override
-      protected JSIModulePackage getJSIModulePackage() {
-          return new ReanimatedJSIModulePackage();
+        @Override
+        protected boolean isNewArchEnabled() {
+          return BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
+        }
+
+        @Override
+        protected Boolean isHermesEnabled() {
+          return BuildConfig.IS_HERMES_ENABLED;
         }
       };
 
@@ -52,8 +54,20 @@ public class MainApplication extends Application implements ReactApplication {
   }
 
   @Override
+  public ReactHost getReactHost() {
+    return DefaultReactHost.getDefaultReactHost(getApplicationContext(), mReactNativeHost);
+  }
+
+  @Override
   public void onCreate() {
     super.onCreate();
-    SoLoader.init(this, /* native exopackage */ false);
+    try {
+      SoLoader.init(this, OpenSourceMergedSoMapping.INSTANCE);
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to initialize SoLoader", e);
+    }
+    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+      DefaultNewArchitectureEntryPoint.load();
+    }
   }
 }

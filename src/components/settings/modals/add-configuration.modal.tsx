@@ -38,17 +38,7 @@ const AddConfigurationsModal:React.FC<AddConfigurationsModalProps> = (
   const isValid = React.useMemo(() => getConfigurationValidator(existsNames).validate({
     name,
     mode: configMode,
-  }).error == null, [name, configMode]);
-
-  const RenderRadioGroup = React.useCallback(() => (
-    <RadioGroup
-      onValueChange={(value: ConfigurationMode) => setConfigMode(value)}
-      initialValue={configMode}
-    >
-      <RadioButton label="Simple Mode" value={ConfigurationMode.SIMPLE} marginB-10 />
-      <RadioButton label="Advanced Mode" value={ConfigurationMode.ADVANCE} />
-    </RadioGroup>
-  ), [configMode]);
+  }).error == null, [name, configMode, existsNames]);
 
   return (
     // eslint-disable-next-line react/jsx-props-no-spreading
@@ -56,9 +46,7 @@ const AddConfigurationsModal:React.FC<AddConfigurationsModalProps> = (
       onDismiss={onDismiss}
       center
       headerProps={{
-        text: {
-          title: 'New Configuration',
-        },
+        title: 'New Configuration',
       }}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
@@ -72,7 +60,7 @@ const AddConfigurationsModal:React.FC<AddConfigurationsModalProps> = (
             value={name}
             onChangeText={(text) => setName(text)}
             validate={
-              (value: string) => getConfigurationNameValidator(existsNames)
+              (value?: string) => getConfigurationNameValidator(existsNames)
                 .validate(value)
                 .error === null
             }
@@ -89,6 +77,7 @@ const AddConfigurationsModal:React.FC<AddConfigurationsModalProps> = (
           />
           <Text text85 $textNeutralLight marginT-10 marginB-15>Editor Mode</Text>
           <RadioGroup
+            initialValue={configMode}
             onValueChange={(value: ConfigurationMode) => setConfigMode(value)}
           >
             <RadioButton label="Simple Mode" value={ConfigurationMode.SIMPLE} marginB-10 />
@@ -100,7 +89,11 @@ const AddConfigurationsModal:React.FC<AddConfigurationsModalProps> = (
           <View paddingV-15 paddingH-20 right row>
             <Button
               disabled={!isValid}
-              onPress={() => onAdd(name, configMode)}
+              onPress={() => {
+                onAdd(name, configMode);
+                setName('');
+                setConfigMode(ConfigurationMode.SIMPLE);
+              }}
               marginR-10
               label="Add"
               size={Button.sizes.medium}

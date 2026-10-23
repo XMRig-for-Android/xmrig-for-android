@@ -36,6 +36,7 @@ module.exports = {
       'warn',
       { allowAsProps: true },
     ],
+    'react/require-default-props': 'off',
   },
   settings: {
     'import/resolver': {

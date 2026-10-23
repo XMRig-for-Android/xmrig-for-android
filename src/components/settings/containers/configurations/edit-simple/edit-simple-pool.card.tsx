@@ -83,7 +83,7 @@ export const EditSimplePoolCard: React.FC<EditSimpleCardProps> = (
                   },
                 ))}
                 validate={
-                  (value: string) => hostnameValidator
+                  (value?: string) => hostnameValidator
                     .validate(value)
                     .error == null
                 }
@@ -112,14 +112,14 @@ export const EditSimplePoolCard: React.FC<EditSimpleCardProps> = (
                   {
                     properties: {
                       pool: {
-                        port: text,
+                        port: text.trim() === '' ? undefined : Number(text),
                       },
                     },
                   },
                 ))}
                 validate={
-                  (value: string) => portValidator
-                    .validate(value)
+                  (value?: string) => portValidator
+                    .validate(value === '' ? undefined : Number(value))
                     .error == null
                 }
                 validationMessage={
@@ -153,7 +153,7 @@ export const EditSimplePoolCard: React.FC<EditSimpleCardProps> = (
               },
             ))}
             validate={
-              (value: string) => usernameValidator
+              (value?: string) => usernameValidator
                 .validate(value)
                 .error == null
             }
@@ -185,7 +185,7 @@ export const EditSimplePoolCard: React.FC<EditSimpleCardProps> = (
               },
             ))}
             validate={
-              (value: string) => passwordValidator
+              (value?: string) => passwordValidator
                 .validate(value)
                 .error == null
             }

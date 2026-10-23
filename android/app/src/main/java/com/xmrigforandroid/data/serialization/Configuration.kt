@@ -1,9 +1,8 @@
 package com.xmrigforandroid.data.serialization
 
 import androidx.annotation.Keep
-import com.facebook.infer.annotation.FalseOnNull
-import kotlinx.serialization.*
-import kotlin.Any
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 @Keep
 @Serializable

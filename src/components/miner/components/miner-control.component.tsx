@@ -29,6 +29,10 @@ export const MinerControl:React.FC<ViewProps> = () => {
     settings.selectedConfiguration,
   );
 
+  React.useEffect(() => {
+    setSelectedConfiguration(settings.selectedConfiguration);
+  }, [settings.selectedConfiguration]);
+
   const isWorking = React.useMemo<boolean>(
     () => workingState !== WorkingState.NOT_WORKING,
     [workingState],
@@ -55,10 +59,15 @@ export const MinerControl:React.FC<ViewProps> = () => {
     }
   }, [settings]);
 
-  React.useEffect(() => settingsDispatcher({
-    type: SettingsActionType.SET_SELECTED_CONFIGURAION,
-    value: selectedConfiguration,
-  }), [selectedConfiguration]);
+  React.useEffect(() => {
+    if (selectedConfiguration === settings.selectedConfiguration) {
+      return;
+    }
+    settingsDispatcher({
+      type: SettingsActionType.SET_SELECTED_CONFIGURAION,
+      value: selectedConfiguration,
+    });
+  }, [selectedConfiguration, settings.selectedConfiguration]);
 
   const cardBorderColor = React.useMemo<string>(() => {
     if (!settings.selectedConfiguration) {
@@ -103,8 +112,6 @@ export const MinerControl:React.FC<ViewProps> = () => {
             onChange={(value: any) => setSelectedConfiguration(value)}
             style={{ ...Typography.text60, color: Colors.$textDefault }}
             floatingPlaceholderStyle={{ ...Typography.text70, color: Colors.$textDefault }}
-            migrate
-            migrateTextField
           >
             {_.map(settings.configurations, (item) => (
               <Picker.Item

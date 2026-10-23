@@ -1,8 +1,8 @@
 import React from 'react';
 import { Colors, LoaderScreen } from 'react-native-ui-lib';
 import { SafeAreaView } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
-import { enableScreens } from 'react-native-screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { SettingsContext, SettingsContextProvider } from './core/settings';
 import { AppNavigator } from './components';
@@ -12,9 +12,7 @@ import { LoggerContextProvider } from './core/logger';
 import { ToasterProvider } from './core/hooks/use-toaster/toaset.context';
 import { LoadAssets } from './assets';
 
-enableScreens(false);
-
-const AppWithSettings:React.FC = () => {
+const AppWithSettings: React.FC = () => {
   React.useEffect(() => {
     LoadAssets();
     Colors.loadSchemes({
@@ -50,21 +48,23 @@ const App = () => {
     return <LoaderScreen message="Loading..." color={Colors.grey40} />;
   }
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <LoggerContextProvider>
-        <PowerContextProvider>
-          <SessionDataContextProvider>
-            <SafeAreaView style={{ flex: 1 }}>
-              <ToasterProvider>
-                <NavigationContainer>
-                  <AppNavigator />
-                </NavigationContainer>
-              </ToasterProvider>
-            </SafeAreaView>
-          </SessionDataContextProvider>
-        </PowerContextProvider>
-      </LoggerContextProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <LoggerContextProvider>
+          <PowerContextProvider>
+            <SessionDataContextProvider>
+              <SafeAreaView style={{ flex: 1 }}>
+                <ToasterProvider>
+                  <NavigationContainer>
+                    <AppNavigator />
+                  </NavigationContainer>
+                </ToasterProvider>
+              </SafeAreaView>
+            </SessionDataContextProvider>
+          </PowerContextProvider>
+        </LoggerContextProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 };
 

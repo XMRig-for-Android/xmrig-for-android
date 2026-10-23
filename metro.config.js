@@ -1,20 +1,16 @@
-/**
- * Metro configuration for React Native
- * https://github.com/facebook/react-native
- *
- * @format
- */
+// eslint-disable-next-line import/no-unresolved
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
-module.exports = {
+/**
+ * Metro configuration
+ * https://reactnative.dev/docs/metro
+ *
+ * @type {import('@react-native/metro-config').MetroConfig}
+ */
+const config = {
   resolver: {
-    blacklistRE: /xmrig\/lib-builder/,
-  },
-  transformer: {
-    getTransformOptions: async () => ({
-      transform: {
-        experimentalImportSupport: false,
-        inlineRequires: true,
-      },
-    }),
+    blockList: [/xmrig\/lib-builder\/.*/],
   },
 };
+
+module.exports = mergeConfig(getDefaultConfig(__dirname), config);

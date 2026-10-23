@@ -4,34 +4,24 @@ set -e
 
 source script/env.sh
 
-cd $EXTERNAL_LIBS_BUILD_ROOT/libuv
-mkdir build && cd build
+cd "$EXTERNAL_LIBS_BUILD_ROOT/libuv"
 
-TOOLCHAIN=$ANDROID_HOME/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake
-CMAKE=$ANDROID_HOME/cmake/3.18.1/bin/cmake
-ANDROID_PLATFORM=android-29
-
-#if [ ! -f "configure" ]; then
-#  ./autogen.sh
-#fi
+TOOLCHAIN="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake"
+CMAKE="$ANDROID_CMAKE"
 
 archs=(arm arm64 x86 x86_64)
 for arch in ${archs[@]}; do
     case ${arch} in
         "arm")
-            target_host=arm-linux-androideabi
             ANDROID_ABI="armeabi-v7a"
             ;;
         "arm64")
-            target_host=aarch64-linux-android
             ANDROID_ABI="arm64-v8a"
             ;;
         "x86")
-            target_host=i686-linux-android
             ANDROID_ABI="x86"
             ;;
         "x86_64")
-            target_host=x86_64-linux-android
             ANDROID_ABI="x86_64"
             ;;
         *)
@@ -39,28 +29,36 @@ for arch in ${archs[@]}; do
             ;;
     esac
 
-    mkdir -p $EXTERNAL_LIBS_BUILD_ROOT/libuv/build/$ANDROID_ABI
-    cd $EXTERNAL_LIBS_BUILD_ROOT/libuv/build/$ANDROID_ABI
-    
-    TARGET_DIR=$EXTERNAL_LIBS_ROOT/libuv/$ANDROID_ABI
-
-    if [ -f "$TARGET_DIR/lib/libuv.la" ]; then
+    TARGET_DIR="$EXTERNAL_LIBS_ROOT/libuv/$ANDROID_ABI"
+    if [ -f "$TARGET_DIR/lib/libuv.a" ] || [ -f "$TARGET_DIR/lib/libuv_a.a" ]; then
       continue
     fi
 
-    mkdir -p $TARGET_DIR
-    echo "- Building for ${arch} (${ANDROID_ABI})"
+    BUILD_DIR="$EXTERNAL_LIBS_BUILD_ROOT/libuv/build/$ANDROID_ABI"
+    mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
 
-    $CMAKE -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN \
+    mkdir -p "$TARGET_DIR"
+    echo "- Building libuv for ${arch} (${ANDROID_ABI})"
+
+    "$CMAKE" -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
         -DANDROID_ABI="$ANDROID_ABI" \
-        -DANDROID_PLATFORM=$ANDROID_PLATFORM \
-        -DCMAKE_INSTALL_PREFIX=$TARGET_DIR \
+        -DANDROID_PLATFORM="$ANDROID_PLATFORM" \
+        -DCMAKE_INSTALL_PREFIX="$TARGET_DIR" \
         -DBUILD_SHARED_LIBS=OFF \
-        ../../ \
+        -DLIBUV_BUILD_SHARED=OFF \
+        -DBUILD_TESTING=OFF \
+        -DLIBUV_BUILD_TESTS=OFF \
+        ../.. \
         && make -j 4 \
-        && make install \
-        && make clean
+        && make install
 
+    if [ -f "$TARGET_DIR/lib/libuv_a.a" ] && [ ! -f "$TARGET_DIR/lib/libuv.a" ]; then
+      cp "$TARGET_DIR/lib/libuv_a.a" "$TARGET_DIR/lib/libuv.a"
+    fi
+    if [ -f "$TARGET_DIR/lib/libuv.a" ] && [ ! -f "$TARGET_DIR/lib/libuv_a.a" ]; then
+      cp "$TARGET_DIR/lib/libuv.a" "$TARGET_DIR/lib/libuv_a.a"
+    fi
 done
 
 exit 0

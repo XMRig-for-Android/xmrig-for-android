@@ -17,7 +17,7 @@ export const SpinnerLayout:React.FC<ViewProps> = () => (
   </View>
 );
 
-export const LazyLoader:React.FC = ({ children }) => (
+export const LazyLoader: React.FC<React.PropsWithChildren> = ({ children }) => (
   <React.Suspense fallback={<SpinnerLayout />}>
     {children}
   </React.Suspense>

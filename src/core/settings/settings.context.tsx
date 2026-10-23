@@ -82,7 +82,7 @@ type SettingsContextProps = {
 // @ts-ignore
 export const SettingsContext:Context<SettingsContextProps> = createContext();
 
-export const SettingsContextProvider:React.FC = ({ children }) => {
+export const SettingsContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [settings, settingsDispatcher] = useReducer(SettingsReducer, initialState);
   const [asyncLoaderState, setAsyncLoaderState] = useState<boolean>(false);
 

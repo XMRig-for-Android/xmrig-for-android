@@ -4,12 +4,28 @@ set -e
 
 source script/env.sh
 
-cd $EXTERNAL_LIBS_BUILD_ROOT/hwloc
-
+cd "$EXTERNAL_LIBS_BUILD_ROOT/hwloc"
 
 if [ ! -f "configure" ]; then
   ./autogen.sh
 fi
+
+compiler_for_arch() {
+    case "$1" in
+        "arm")
+            echo "armv7a-linux-androideabi${ANDROID_API}-clang"
+            ;;
+        "arm64")
+            echo "aarch64-linux-android${ANDROID_API}-clang"
+            ;;
+        "x86")
+            echo "i686-linux-android${ANDROID_API}-clang"
+            ;;
+        "x86_64")
+            echo "x86_64-linux-android${ANDROID_API}-clang"
+            ;;
+    esac
+}
 
 archs=(arm arm64 x86 x86_64)
 for arch in ${archs[@]}; do
@@ -35,26 +51,34 @@ for arch in ${archs[@]}; do
             ;;
     esac
 
-    TARGET_DIR=$EXTERNAL_LIBS_ROOT/hwloc/$ANDROID_ABI
+    TARGET_DIR="$EXTERNAL_LIBS_ROOT/hwloc/$ANDROID_ABI"
 
-    if [ -f "$TARGET_DIR/lib/hwloc.la" ]; then
+    if [ -f "$TARGET_DIR/lib/libhwloc.a" ]; then
       continue
     fi
 
-    mkdir -p $TARGET_DIR
-    echo "building for ${arch}"
+    if [ ! -f "configure" ]; then
+      ./autogen.sh
+    fi
 
-    PATH=$NDK_TOOL_DIR/$arch/$target_host/bin:$NDK_TOOL_DIR/$arch/bin:$PATH \
-        CC=clang CXX=clang++; \
+    mkdir -p "$TARGET_DIR"
+    echo "building hwloc for ${arch}"
+
+    CC_BIN="$(compiler_for_arch "$arch")"
+    PATH="$TOOLCHAINS_PATH/bin:$PATH" \
+        CC="$CC_BIN" \
+        CXX="${CC_BIN}++" \
+        AR="llvm-ar" \
+        RANLIB="llvm-ranlib" \
+        STRIP="llvm-strip" \
         ./configure \
-        --prefix=${TARGET_DIR} \
-        --host=${target_host} \
+        --prefix="${TARGET_DIR}" \
+        --host="${target_host}" \
         --enable-static \
         --disable-shared \
         && make -j 4 \
         && make install \
-        && make clean
-
+        && make distclean
 done
 
 exit 0

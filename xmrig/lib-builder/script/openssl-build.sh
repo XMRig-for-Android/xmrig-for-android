@@ -4,13 +4,10 @@ set -e
 
 source script/env.sh
 
-cd $EXTERNAL_LIBS_BUILD_ROOT/openssl
-#mkdir build && cd build
+cd "$EXTERNAL_LIBS_BUILD_ROOT/openssl"
 
-CC=clang
-PATH=$TOOLCHAINS_PATH/bin:$PATH
-ANDROID_API=29
-ANDROID_PLATFORM=android-29
+export ANDROID_NDK_ROOT
+export PATH="$TOOLCHAINS_PATH/bin:$PATH"
 
 archs=(arm arm64 x86 x86_64)
 for arch in ${archs[@]}; do
@@ -36,17 +33,30 @@ for arch in ${archs[@]}; do
             ;;
     esac
 
-    TARGET_DIR=$EXTERNAL_LIBS_ROOT/openssl/$ANDROID_ABI
+    TARGET_DIR="$EXTERNAL_LIBS_ROOT/openssl/$ANDROID_ABI"
 
-    mkdir -p $TARGET_DIR
-    echo "building for ${arch}"
+    if [ -f "$TARGET_DIR/lib/libssl.a" ] && [ -f "$TARGET_DIR/lib/libcrypto.a" ]; then
+      continue
+    fi
 
-    ./Configure ${architecture} -D__ANDROID_API__=$ANDROID_API --prefix=${TARGET_DIR} -no-shared -no-asm -no-zlib -no-comp -no-dgram -no-filenames -no-cms
+    mkdir -p "$TARGET_DIR"
+    echo "building OpenSSL for ${arch}"
+
+    ./Configure "${architecture}" \
+        -D__ANDROID_API__="$ANDROID_API" \
+        --prefix="${TARGET_DIR}" \
+        --libdir=lib \
+        no-shared \
+        no-asm \
+        no-zlib \
+        no-comp \
+        no-dgram \
+        no-filenames \
+        no-cms
 
     make -j 4
-    make install
-    make clean
-
+    make install_sw
+    make distclean || make clean
 done
 
 exit 0

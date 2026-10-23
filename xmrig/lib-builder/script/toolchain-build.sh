@@ -4,17 +4,12 @@ set -e
 
 source script/env.sh
 
-build_root=$EXTERNAL_LIBS_BUILD_ROOT
-PATH=$ANDROID_NDK_ROOT/build/tools/:$PATH
+# NDK r19+ ships a usable LLVM toolchain. make_standalone_toolchain.py and the
+# GCC 4.9 headers it used to patch no longer exist on NDK r25+.
+if [ ! -x "$TOOLCHAINS_PATH/bin/clang" ] && [ ! -x "$TOOLCHAINS_PATH/bin/clang++" ]; then
+  echo "NDK LLVM toolchain was not found at $TOOLCHAINS_PATH" >&2
+  exit 1
+fi
 
-args="--api 29 --stl=libc++"
-archs=(arm arm64 x86 x86_64)
-
-for arch in ${archs[@]}; do
-    if [ ! -d "$NDK_TOOL_DIR/$arch" ]; then
-        echo "installing $ANDROID_NDK_ROOT $arch $args"
-        make_standalone_toolchain.py $args --arch $arch --install-dir $NDK_TOOL_DIR/$arch
-        sed -i.orig "s|using ::fgetpos;|//using ::fgetpos;|" $NDK_TOOL_DIR/$arch/include/c++/4.9.x/cstdio
-        sed -i.orig "s|using ::fsetpos;|//using ::fsetpos;|" $NDK_TOOL_DIR/$arch/include/c++/4.9.x/cstdio
-    fi
-done
+echo "Using NDK $NDK_VERSION toolchain at $TOOLCHAINS_PATH"
+echo "Using CMake at $ANDROID_CMAKE"

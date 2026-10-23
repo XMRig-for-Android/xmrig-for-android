@@ -23,8 +23,8 @@ type SessionDataContextType = {
   minerData: IMinerSummary | null,
   hashrateTotals: IHashrateHistory,
   minerActions: {
-    pause: () => {},
-    resume: () => {},
+    pause: () => void,
+    resume: () => void,
   },
   CPUTemp: number,
 }
@@ -32,9 +32,11 @@ type SessionDataContextType = {
 // @ts-ignore
 export const SessionDataContext:React.Context<SessionDataContextType> = React.createContext();
 
-export const SessionDataContextProvider:React.FC = ({ children }) => {
+export const SessionDataContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const toaster = useToaster();
   const { settings, settingsDispatcher } = React.useContext(SettingsContext);
+  const settingsRef = React.useRef(settings);
+  settingsRef.current = settings;
   const { log } = React.useContext(LoggerContext);
   const { isLowBattery, isPowerConnected } = React.useContext(PowerContext);
 
@@ -96,8 +98,9 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
 
     const onConfigUpdateSub:EmitterSubscription = MinerEmitter.addListener('onConfigUpdate', (data) => {
       console.log('onConfigUpdate', data.config);
-      const cConfig:Configuration | undefined = settings.configurations.find(
-        (config) => config.id === settings.selectedConfiguration,
+      const currentSettings = settingsRef.current;
+      const cConfig:Configuration | undefined = currentSettings.configurations.find(
+        (config) => config.id === currentSettings.selectedConfiguration,
       );
       if (cConfig && cConfig.mode === ConfigurationMode.SIMPLE) {
         try {
@@ -131,38 +134,53 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
     return () => {
       onLogSub.remove();
       onConfigUpdateSub.remove();
-      XMRigForAndroid.stop();
     };
   }, []);
 
+  const wasLowBattery = React.useRef(false);
   React.useEffect(() => {
-    if (isLowBattery) {
+    if (isLowBattery && !wasLowBattery.current) {
       toaster({
         message: 'Battery is low',
         position: 'top',
         preset: Incubator.ToastPresets.FAILURE,
       });
     }
-    if (settings.power.pauseOnLowBattery && isLowBattery === true) {
+    wasLowBattery.current = isLowBattery;
+    if (
+      settings.power.pauseOnLowBattery
+      && isLowBattery === true
+      && workingState === WorkingState.MINING
+    ) {
       pauseMiner();
-    } else if (settings.power.resumeOnBatteryOk && isLowBattery === false) {
+    } else if (
+      settings.power.resumeOnBatteryOk
+      && isLowBattery === false
+      && workingState === WorkingState.PAUSED
+    ) {
       resumeMiner();
     }
-  }, [isLowBattery]);
+  }, [isLowBattery, settings.power, workingState]);
 
+  const previousPowerConnected = React.useRef<boolean | null>(null);
   React.useEffect(() => {
-    if (!isPowerConnected) {
-      toaster({
-        message: 'Charger is disconnected',
-        position: 'top',
-        preset: Incubator.ToastPresets.FAILURE,
-      });
-    } else {
-      toaster({
-        message: 'Charger is connected',
-        position: 'top',
-        preset: Incubator.ToastPresets.SUCCESS,
-      });
+    if (previousPowerConnected.current === null) {
+      previousPowerConnected.current = isPowerConnected;
+    } else if (previousPowerConnected.current !== isPowerConnected) {
+      previousPowerConnected.current = isPowerConnected;
+      if (!isPowerConnected) {
+        toaster({
+          message: 'Charger is disconnected',
+          position: 'top',
+          preset: Incubator.ToastPresets.FAILURE,
+        });
+      } else {
+        toaster({
+          message: 'Charger is connected',
+          position: 'top',
+          preset: Incubator.ToastPresets.SUCCESS,
+        });
+      }
     }
     if (
       settings.power.resumeOnChargerConnected
@@ -176,7 +194,7 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
     ) {
       pauseMiner();
     }
-  }, [isPowerConnected]);
+  }, [isPowerConnected, settings.power, workingState]);
 
   React.useEffect(() => {
     if (!Number.isNaN(cpuTemperature)) {
@@ -194,7 +212,7 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
         resumeMiner();
       }
     }
-  }, [cpuTemperature]);
+  }, [cpuTemperature, settings.thermal, workingState]);
 
   return (
     // eslint-disable-next-line react/jsx-no-constructed-context-values

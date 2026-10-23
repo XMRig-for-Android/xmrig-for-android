@@ -53,7 +53,11 @@ class ConfigBuilderPrivate {
   }
 
   getConfigBase64() {
-    return base64.encode(this.getConfigString());
+    const utf8 = encodeURIComponent(this.getConfigString()).replace(
+      /%([0-9A-F]{2})/g,
+      (_match, hex: string) => String.fromCharCode(parseInt(hex, 16)),
+    );
+    return base64.encode(utf8);
   }
 }
 
@@ -67,25 +71,30 @@ export default class ConfigBuilder {
     if (configuration.mode === ConfigurationMode.SIMPLE) {
       const asSimpleConfig: ISimpleConfiguration = _.cloneDeep(configuration);
       pConfig.reset();
-      pConfig.setPool({
-        user: asSimpleConfig.properties?.pool?.username,
-        pass: asSimpleConfig.properties?.pool?.password,
-        url: `${asSimpleConfig.properties?.pool?.hostname}:${asSimpleConfig.properties?.pool?.port}`,
-        tls: asSimpleConfig.properties?.pool?.sslEnabled,
-      });
+      const hostname = asSimpleConfig.properties?.pool?.hostname;
+      const port = asSimpleConfig.properties?.pool?.port;
+      if (hostname && port) {
+        pConfig.setPool({
+          user: asSimpleConfig.properties?.pool?.username,
+          pass: asSimpleConfig.properties?.pool?.password,
+          url: `${hostname}:${port}`,
+          tls: asSimpleConfig.properties?.pool?.sslEnabled,
+        });
+      }
+      const disabledAlgos = Object.fromEntries(
+        Object.entries(asSimpleConfig.properties?.algos || {})
+          .filter(([, enabled]) => enabled === false)
+          .map(([algo]) => [algo, false]),
+      );
       pConfig.setProps({
         cpu: {
-          priority: asSimpleConfig.properties?.cpu?.priority,
+          priority: asSimpleConfig.properties?.cpu?.priority ?? null,
           yield: asSimpleConfig.properties?.cpu?.yield,
           'max-threads-hint': asSimpleConfig.properties?.cpu?.max_threads_hint,
+          ...disabledAlgos,
         },
         randomx: {
           mode: asSimpleConfig.properties?.cpu?.random_x_mode,
-        },
-      });
-      pConfig.setProps({
-        cpu: {
-          ...asSimpleConfig.properties?.algos,
         },
       });
       pConfig.setProps({

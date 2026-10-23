@@ -28,7 +28,7 @@ export const EditSimpleAlgorithemsCard: React.FC<EditSimpleCardProps> = (
       },
     );
     return () => subscription?.remove();
-  });
+  }, []);
 
   const renderItem = React.useCallback((item: Algorithm) => (
     <View marginB-5 key={`algo-${item}`} style={{ borderBottomWidth: 1, borderColor: Colors.$outlineDisabled }} marginR-10 paddingB-10>
@@ -70,7 +70,7 @@ export const EditSimpleAlgorithemsCard: React.FC<EditSimpleCardProps> = (
           viewWidth={dimensions.width - 20}
           itemSpacing={10}
           items={
-          Algorithems.sort().map((item) => ({
+          [...Algorithems].sort().map((item) => ({
             renderCustomItem: () => renderItem(item),
           }))
         }

@@ -103,14 +103,14 @@ export const EditSimpleCPUCard: React.FC<EditSimpleCardProps> = (
               {
                 properties: {
                   cpu: {
-                    priority: text,
+                    priority: text.trim() === '' ? undefined : Number(text),
                   },
                 },
               },
             ))}
             validate={
-              (value: string) => priorityValidator
-                .validate(value)
+              (value?: string) => !value || priorityValidator
+                .validate(Number(value))
                 .error == null
             }
             validationMessage={
@@ -142,14 +142,14 @@ export const EditSimpleCPUCard: React.FC<EditSimpleCardProps> = (
               {
                 properties: {
                   cpu: {
-                    max_threads_hint: text,
+                    max_threads_hint: text.trim() === '' ? undefined : Number(text),
                   },
                 },
               },
             ))}
             validate={
-              (value: string) => maxThreadsHintValidator
-                .validate(value)
+              (value?: string) => maxThreadsHintValidator
+                .validate(value === '' ? undefined : Number(value))
                 .error == null
             }
             validationMessage={

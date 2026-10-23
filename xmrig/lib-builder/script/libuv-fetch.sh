@@ -4,13 +4,13 @@ set -e
 
 source script/env.sh
 
-cd $EXTERNAL_LIBS_BUILD_ROOT
+cd "$EXTERNAL_LIBS_BUILD_ROOT"
 
-version="v1.43.0"
+version="v1.53.0"
 
 if [ ! -d "libuv" ]; then
-  git clone https://github.com/libuv/libuv.git -b ${version}
+  git clone https://github.com/libuv/libuv.git -b "${version}"
 else
-  cd libuv
-  git checkout ${version}
+  git -C libuv fetch --tags
+  git -C libuv checkout "${version}"
 fi

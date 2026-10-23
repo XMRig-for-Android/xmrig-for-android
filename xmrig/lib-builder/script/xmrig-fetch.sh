@@ -4,20 +4,18 @@ set -e
 
 source script/env.sh
 
-cd $EXTERNAL_LIBS_BUILD_ROOT
+cd "$EXTERNAL_LIBS_BUILD_ROOT"
 
-version="v6.17.0"
+version="v6.26.0"
+LIB_BUILDER_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 if [ ! -d "xmrig" ]; then
-  git clone https://github.com/xmrig/xmrig.git -b ${version}
-  cd ..
-  cd ..
-  patch build/src/xmrig/src/net/strategies/DonateStrategy.cpp ./xmrig.patch --force
+  git clone https://github.com/xmrig/xmrig.git -b "${version}"
 else
-  cd xmrig
-  git checkout ${version}
-  cd ..
-  cd ..
-  cd ..
-  patch build/src/xmrig/src/net/strategies/DonateStrategy.cpp ./xmrig.patch --force
+  git -C xmrig fetch --tags
+  git -C xmrig checkout "${version}"
 fi
+
+# Re-apply on a clean tree so a previous forced patch cannot stack.
+git -C xmrig checkout -- src/net/strategies/DonateStrategy.cpp
+patch -d xmrig -p1 --forward --input="$LIB_BUILDER_DIR/xmrig.patch"

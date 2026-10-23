@@ -1,8 +1,8 @@
 package com.xmrigforandroid.utils;
 
-import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Detects when a process is finished and invokes the associated listeners.
@@ -16,7 +16,7 @@ public class ProcessExitDetector extends Thread {
     /** The process for which we have to detect the end. */
     private Process process;
     /** The associated listeners to be invoked at the end of the process. */
-    private List<ProcessListener> listeners = new ArrayList<ProcessListener>();
+    private final List<ProcessListener> listeners = new CopyOnWriteArrayList<ProcessListener>();
 
     /**
      * Starts the detection for the given process
@@ -46,6 +46,7 @@ public class ProcessExitDetector extends Thread {
                 listener.processFinished(process);
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

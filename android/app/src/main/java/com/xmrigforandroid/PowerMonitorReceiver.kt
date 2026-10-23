@@ -6,7 +6,6 @@ import android.content.Intent
 import android.util.Log
 import com.xmrigforandroid.events.PowerEvent
 import com.xmrigforandroid.events.PowerEventAction
-import com.xmrigforandroid.events.StdoutEvent
 import org.greenrobot.eventbus.EventBus
 import android.os.BatteryManager
 
@@ -40,12 +39,13 @@ class PowerMonitorReceiver : BroadcastReceiver() {
                 Log.d(this.javaClass.name, "ACTION_BATTERY_CHANGED")
                 val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                 val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-
-                val currentBatteryLevel = level * 100 / scale.toFloat()
-                EventBus.getDefault().post(PowerEvent(PowerEventAction.BATTERY_CHANGED, currentBatteryLevel))
+                if (level >= 0 && scale > 0) {
+                    val currentBatteryLevel = level * 100 / scale.toFloat()
+                    EventBus.getDefault().post(PowerEvent(PowerEventAction.BATTERY_CHANGED, currentBatteryLevel))
+                }
             }
             else -> {
-                print("Something elese")
+                Log.d(this.javaClass.name, "Unhandled power action: $action")
             }
         }
     }

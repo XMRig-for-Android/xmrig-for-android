@@ -14,7 +14,7 @@ type LoggerContextProps = {
 // @ts-ignore
 export const LoggerContext:React.Context<LoggerContextProps> = React.createContext();
 
-export const LoggerContextProvider:React.FC = ({ children }) => {
+export const LoggerContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [loggerState, loggerDispatcher] = React.useReducer(LoggerReducer, initialState);
 
   const log = React.useCallback((message: string) => loggerDispatcher({

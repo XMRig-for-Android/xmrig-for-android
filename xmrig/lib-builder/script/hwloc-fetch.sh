@@ -4,13 +4,13 @@ set -e
 
 source script/env.sh
 
-cd $EXTERNAL_LIBS_BUILD_ROOT
+cd "$EXTERNAL_LIBS_BUILD_ROOT"
 
-version=v2.7
+version="v2.15"
 
 if [ ! -d "hwloc" ]; then
-  git clone https://github.com/open-mpi/hwloc.git -b ${version}
+  git clone https://github.com/open-mpi/hwloc.git -b "${version}"
 else
-  cd hwloc
-  git checkout ${version}
+  git -C hwloc fetch --tags
+  git -C hwloc checkout "${version}"
 fi

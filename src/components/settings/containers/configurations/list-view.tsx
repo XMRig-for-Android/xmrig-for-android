@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React from 'react';
 import {
   StyleSheet, FlatList,
@@ -8,6 +8,7 @@ import {
   Card, ListItem, Text, View, ViewProps, Checkbox, Colors,
 } from 'react-native-ui-lib';
 import _ from 'lodash';
+import { RootStackParamList } from '../../../../core/navigation';
 import { Configuration } from '../../../../core/settings/settings.interface';
 
 type ConfigurationsListViewProps = ViewProps & {
@@ -19,8 +20,13 @@ export const ConfigurationsListView:React.FC<ConfigurationsListViewProps> = ({
   configurations = [],
   onSelected,
 }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [selected, setSelected] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const ids = new Set(configurations.map((config) => `${config.id}`));
+    setSelected((current) => current.filter((id) => ids.has(id)));
+  }, [configurations]);
 
   React.useEffect(() => onSelected(selected), [selected]);
 
@@ -35,7 +41,7 @@ export const ConfigurationsListView:React.FC<ConfigurationsListViewProps> = ({
           renderItem={({ item }) => (
             <View>
               <ListItem
-                onPress={() => navigation.navigate('Configuration' as never, { id: item.id } as never)}
+                onPress={() => navigation.navigate('Configuration', { id: item.id })}
               >
                 <ListItem.Part marginH-10 containerStyle={merge(styles.border, { flexGrow: 1 })}>
                   <ListItem.Part column containerStyle={{ flexGrow: 1 }}>

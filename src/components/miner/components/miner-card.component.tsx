@@ -15,8 +15,8 @@ export type MinerCardProps = ViewProps & {
 export const MinerCard:React.FC<MinerCardProps> = ({
   style,
   children,
-  title,
-  subTitle,
+  title = '',
+  subTitle = '',
   disabled = false,
   cardProps = {},
   badgeProps = {},

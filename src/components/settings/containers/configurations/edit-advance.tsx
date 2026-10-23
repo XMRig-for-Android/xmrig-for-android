@@ -5,7 +5,6 @@ import {
 } from 'react-native-ui-lib';
 import {
   IAdvanceConfiguration,
-  ISimpleConfiguration,
 } from '../../../../core/settings/settings.interface';
 
 const EditAdvanceForkCard = React.lazy(() => import('./edit-advance/edit-advance-fork.card'));
@@ -20,7 +19,7 @@ export const ConfigurationEditAdvance:React.FC<ConfigurationEditAdvanceProps> = 
   configuration,
   onUpdate,
 }) => {
-  const [localState, setLocalState] = React.useState<ISimpleConfiguration>(configuration);
+  const [localState, setLocalState] = React.useState<IAdvanceConfiguration>(configuration);
 
   React.useEffect(() => {
     onUpdate(localState);
