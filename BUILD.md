@@ -9,13 +9,13 @@
 * Android SDK Build Tools 35.0.0
 * Android NDK 27.0.12077973
 * CMake 3.22 or newer
-* Python 3, `autoconf`, `automake`, and `libtool` (needed when building hwloc from git)
+* `autoconf`, `automake`, and `libtool` (needed when building hwloc from git)
 
 ## Build XMRig
-This script will compile hwloc, libuv and xmrig for each ABI. The execuable will be copied to `jniLibs` folder in android project.
+This script will compile hwloc, libuv, openssl, xmrig, and xmrig-mo for each ABI and copy the binaries to the `jniLibs` folder in the Android project.
 ```
 cd xmrig/lib-builder
-make install
+make
 ```
 
 
