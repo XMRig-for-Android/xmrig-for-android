@@ -53,13 +53,34 @@ Clone the repo
 
 `yarn install`
 
-Start meteor server
-`yarn start`
+### Run on Android (debug)
 
-If you use nvm - open Android Studio from terminal after running `nvm use`.
+The debug app loads JavaScript from **Metro** on your Mac (port **8081**). If Metro is not running, you will see *Unable to load script* / *index.android.bundle*.
 
-Run Android Emulator
-`npx react-native run-android`
+**Recommended** (starts Metro if needed, runs `adb reverse`, installs the app):
+
+```bash
+bash scripts/run-android-dev.sh
+```
+
+**Manual** — use two terminals:
+
+```bash
+# Terminal 1
+yarn start
+
+# Terminal 2 (physical device over USB)
+adb reverse tcp:8081 tcp:8081
+npx react-native run-android
+```
+
+Emulator: `adb reverse` is optional; the app uses `10.0.2.2:8081` to reach Metro on the host.
+
+If you launch the app from Android Studio without Metro, open the dev menu (shake device or `adb shell input keyevent 82`) → **Reload**, or press **R** twice in the Metro terminal.
+
+If you use nvm, run `nvm use` before starting Metro or Gradle.
+
+Release builds embed the bundle; debug builds do not include `index.android.bundle` in the APK.
 
 ### Native build errors (`libc++_shared`, react-native-reanimated)
 

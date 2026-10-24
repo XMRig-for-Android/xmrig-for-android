@@ -15,7 +15,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "android": "react-native run-android",
+    "android": "bash scripts/run-android-dev.sh",
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
