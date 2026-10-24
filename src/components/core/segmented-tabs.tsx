@@ -5,7 +5,8 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
-import { Colors, Text, View } from 'react-native-ui-lib';
+import { Text, View } from 'react-native-ui-lib';
+import { palette, radius, shadow } from '../../core/theme';
 
 type TabItem = {
   label: string;
@@ -34,18 +35,31 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
     setVisited((current) => (current.includes(next) ? current : [...current, next]));
   };
 
+  const isBottom = tabBarPosition === 'bottom';
+
   const bar = (
-    <View style={[tabBarPosition === 'bottom' ? styles.bottomWrap : styles.topWrap, tabBarStyle]}>
-      <View row style={styles.track}>
+    <View style={[isBottom ? styles.bottomWrap : styles.topWrap, tabBarStyle]}>
+      <View row style={[styles.track, isBottom && styles.trackDark]}>
         {items.map((item, itemIndex) => {
           const selected = itemIndex === index;
           return (
             <Pressable
               key={item.label}
-              style={[styles.tab, selected ? styles.tabSelected : undefined]}
+              style={[
+                styles.tab,
+                selected && styles.tabSelected,
+                selected && isBottom && styles.tabSelectedDark,
+              ]}
               onPress={() => select(itemIndex)}
             >
-              <Text style={[styles.tabLabel, selected ? styles.tabLabelSelected : undefined]}>
+              <Text
+                style={[
+                  styles.tabLabel,
+                  isBottom && styles.tabLabelDark,
+                  selected && styles.tabLabelSelected,
+                  selected && isBottom && styles.tabLabelSelectedDark,
+                ]}
+              >
                 {item.label}
               </Text>
             </Pressable>
@@ -88,42 +102,58 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
 const styles = StyleSheet.create({
   topWrap: {
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
+    paddingTop: 6,
+    paddingBottom: 10,
+    backgroundColor: palette.background,
   },
   bottomWrap: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 40,
     paddingTop: 8,
-    paddingBottom: 12,
+    paddingBottom: 14,
+    backgroundColor: palette.background,
   },
   track: {
-    backgroundColor: '#E7E9EE',
-    borderRadius: 16,
+    backgroundColor: palette.track,
+    borderRadius: radius.md,
     padding: 4,
+  },
+  trackDark: {
+    backgroundColor: palette.ink,
+    borderRadius: radius.pill,
+    padding: 5,
+    ...shadow(3),
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   tabSelected: {
-    backgroundColor: Colors.white,
-    shadowColor: '#101828',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    backgroundColor: palette.surface,
+    ...shadow(1),
+  },
+  tabSelectedDark: {
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    elevation: 0,
+    shadowOpacity: 0,
   },
   tabLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    color: Colors.$textNeutral,
+    fontWeight: '600',
+    color: palette.inkSubtle,
+  },
+  tabLabelDark: {
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   tabLabelSelected: {
     fontWeight: '700',
-    color: Colors.$textPrimary,
+    color: palette.ink,
+  },
+  tabLabelSelectedDark: {
+    color: palette.onHero,
   },
   content: {
     minHeight: 0,

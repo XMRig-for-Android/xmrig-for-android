@@ -16,6 +16,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { XMRigLogView } from '../../containers/xmrig-log';
 import { ILoggerLine, LoggerActionType, LoggerContext } from '../../../../core/logger';
 import { useToaster } from '../../../../core/hooks/use-toaster/use-toaster.hook';
+import { palette } from '../../../../core/theme';
 
 const actionsButtonDefault: ButtonProps = {
   label: 'Menu',
@@ -77,13 +78,14 @@ const LogScreen:React.FC<ViewProps> = () => {
       <View
         row
         spread
-        paddingV-10
-        paddingH-10
+        paddingT-8
+        paddingB-12
+        paddingH-20
         centerV
       >
-        <View row centerV>
-          <Text text60>Miner Log</Text>
-          <Text text80 marginL-10>(last 100 rows)</Text>
+        <View>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: palette.ink, letterSpacing: -0.3 }}>Miner Log</Text>
+          <Text style={{ fontSize: 12, fontWeight: '500', color: palette.inkSubtle }}>Last 100 lines</Text>
         </View>
         <Button
           size={Button.sizes.small}
@@ -95,7 +97,7 @@ const LogScreen:React.FC<ViewProps> = () => {
       </View>
       <View
         flex
-        paddingH-10
+        paddingH-16
         paddingB-10
         useSafeArea
       >

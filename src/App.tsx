@@ -10,13 +10,14 @@ import { PowerContextProvider } from './core/power/power.context';
 import { LoggerContextProvider } from './core/logger';
 import { ToasterProvider } from './core/hooks/use-toaster/toaset.context';
 import { LoadAssets } from './assets';
+import { palette } from './core/theme';
 
 const AppWithSettings: React.FC = () => {
   React.useEffect(() => {
     LoadAssets();
     Colors.loadSchemes({
       light: {
-        screenBG: Colors.grey70,
+        screenBG: palette.background,
         textColor: Colors.grey10,
         moonOrSun: Colors.yellow30,
         mountainForeground: Colors.green30,
@@ -52,7 +53,7 @@ const App = () => {
         <LoggerContextProvider>
           <PowerContextProvider>
             <SessionDataContextProvider>
-              <SafeAreaView style={{ flex: 1 }}>
+              <SafeAreaView style={{ flex: 1, backgroundColor: palette.background }}>
                 <ToasterProvider>
                   <NavigationContainer>
                     <AppNavigator />
