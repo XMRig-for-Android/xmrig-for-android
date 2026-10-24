@@ -21,8 +21,7 @@
     "test": "jest",
     "test:resnapshot": "jest -u",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint . --ext .js,.jsx,.ts,.tsx",
-    "doctor": "bash scripts/run-react-native-doctor.sh",
-    "postinstall": "patch-package && chmod +x node_modules/@react-native-community/cli/build/bin.js node_modules/metro/src/cli.js node_modules/metro-symbolicate/src/index.js"
+    "doctor": "bash scripts/run-react-native-doctor.sh"
   },
   "dependencies": {
     "@brightlayer-ui/react-native-progress-icons": "^2.3.0",
@@ -44,7 +43,7 @@
     "react": "19.3.1",
     "react-native": "0.88.0",
     "react-native-base64": "^0.2.2",
-    "react-native-gesture-handler": "^3.4.0",
+    "react-native-gesture-handler": "2.33.1",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-reanimated": "4.7.1",
     "react-native-safe-area-context": "^5.10.1",
@@ -87,7 +86,6 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "jest": "^29.7.0",
-    "patch-package": "^8.0.1",
     "react-test-renderer": "19.3.1",
     "typescript": "^6.0.3"
   },

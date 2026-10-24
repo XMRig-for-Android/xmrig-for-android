@@ -5,7 +5,12 @@ plugins {
     id("com.facebook.react.settings")
 }
 extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
-    ex.autolinkLibrariesFromCommand()
+    // Invoke the CLI with node so the bin script does not need to be executable.
+    ex.autolinkLibrariesFromCommand([
+        "node",
+        "node_modules/@react-native-community/cli/build/bin.js",
+        "config",
+    ])
 }
 rootProject.name = 'XMRig for Android'
 include ':app'

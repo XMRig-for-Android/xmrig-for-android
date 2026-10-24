@@ -20,3 +20,22 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// Android Gradle Plugin 9 rejects getDefaultProguardFile("proguard-android.txt").
+// Some libraries still request that filename. Rewrite it before their script runs.
+gradle.beforeProject { project ->
+    project.pluginManager.withPlugin("com.android.library") {
+        def android = project.extensions.findByName("android")
+        if (android == null) {
+            return
+        }
+        def original = android.metaClass.getMetaMethod("getDefaultProguardFile", String)
+        if (original == null) {
+            return
+        }
+        android.metaClass.getDefaultProguardFile = { String name ->
+            def resolved = name == "proguard-android.txt" ? "proguard-android-optimize.txt" : name
+            original.invoke(delegate, [resolved] as Object[])
+        }
+    }
+}

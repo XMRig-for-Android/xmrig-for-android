@@ -34,19 +34,13 @@ eval "$(scripts/setup-java-env.sh --print)"
 
 ### React Native doctor
 
-Stock `npx react-native doctor` (RN 0.88) does not recognize JDK 23 and uses `sdkmanager` to detect the Android SDK, which often fails on JDK 23. This repo patches the doctor checks and provides a wrapper that sets `ANDROID_HOME` first:
+`yarn doctor` loads the Android SDK and JDK, then runs stock `react-native doctor`. React Native's doctor still treats JDK newer than 20 as unsupported, so JDK 23 can be reported even though this project builds with it. The SDK check uses `sdkmanager` and can fail on JDK 23; `source scripts/setup-android-env.sh` writes `android/local.properties` so Gradle can find the SDK without that check.
 
 ```bash
 yarn doctor
 ```
 
-After `yarn install`, run `yarn doctor` rather than bare `npx react-native doctor`.
-
-Doctor discovers the SDK from `android/local.properties` or the default macOS/Linux SDK paths even when `ANDROID_HOME` is unset in your shell. Run `source scripts/setup-android-env.sh` once to write `local.properties`.
-
-The **Adb** check only passes while an emulator or USB device is connected (`adb devices` shows `device`). Start the emulator before running doctor if you want a green Adb line; if nothing is connected, it is reported as a warning, not a build blocker.
-
-If `which adb` is Homebrew (`/opt/homebrew/bin/adb`) that is fine; doctor falls back to it when the SDK copy is missing. Keep `android/local.properties` as a single line `sdk.dir=/path/to/sdk` — do not commit it (it is gitignored). If it ever contains shell noise (e.g. from nvm), run `source scripts/setup-android-env.sh` to rewrite it.
+The **Adb** check passes only while an emulator or USB device is connected (`adb devices` shows `device`). Start the emulator before running doctor if you want a green Adb line. Keep `android/local.properties` as a single line `sdk.dir=/path/to/sdk` — do not commit it (it is gitignored). If it ever contains shell noise (e.g. from nvm), run `source scripts/setup-android-env.sh` to rewrite it.
 
 ## Build
 Clone the repo
