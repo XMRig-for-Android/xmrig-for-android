@@ -1,9 +1,10 @@
 import { merge } from 'lodash/fp';
 import React from 'react';
 import {
-  Card, Colors, GridView, SkeletonView, Switch, Text, View,
+  Card, Colors, SkeletonView, Switch, Text, View,
 } from 'react-native-ui-lib';
 import { Dimensions, ScaledSize } from 'react-native';
+import { ItemGrid } from '../../../../core/item-grid';
 import { Algorithems, Algorithm } from '../../../../../core/settings/settings.interface';
 import { EditSimpleCardProps } from './index';
 
@@ -65,12 +66,13 @@ export const EditSimpleAlgorithemsCard: React.FC<EditSimpleCardProps> = (
         />
       </View>
       <View spread padding-20 paddingT-10>
-        <GridView
+        <ItemGrid
           numColumns={2}
           viewWidth={dimensions.width - 20}
           itemSpacing={10}
           items={
           [...Algorithems].sort().map((item) => ({
+            key: item,
             renderCustomItem: () => renderItem(item),
           }))
         }

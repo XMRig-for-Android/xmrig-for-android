@@ -10,8 +10,9 @@ import prettyBytes from 'pretty-bytes';
 import { hashrateToString } from 'hashrate';
 import { Area, CartesianChart, Line } from 'victory-native';
 import {
-  Colors, View, Text, ViewProps, Card, GridView, Assets,
+  Colors, View, Text, ViewProps, Card, Assets,
 } from 'react-native-ui-lib';
+import { ItemGrid } from '../../core/item-grid';
 import { IMinerSummary } from '../../../core/hooks';
 import { MinerCard } from '../components/miner-card.component';
 import { IHashrateHistory } from '../../../core/session-data/session-data.interface';
@@ -163,7 +164,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
   return (
     <>
       <View flex row paddingV-10>
-        <GridView
+        <ItemGrid
           items={[
             {
               renderCustomItem: () => (
@@ -189,7 +190,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
           <Text text60>Hashrate</Text>
         </View>
         <View flex row>
-          <GridView
+          <ItemGrid
             items={[
               {
                 renderCustomItem: () => (
@@ -240,7 +241,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
           <Text text60>Shares</Text>
         </View>
         <View flex row>
-          <GridView
+          <ItemGrid
             items={[
               { renderCustomItem: () => <GridCard title="Accepted" text={minerData?.connection.accepted || 0} /> },
               { renderCustomItem: () => <GridCard title="Rejected" text={minerData?.connection.rejected || 0} /> },
@@ -251,7 +252,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
           />
         </View>
         <View flex row paddingT-10>
-          <GridView
+          <ItemGrid
             items={[
               { renderCustomItem: () => <GridCard title="Difficulty" text={minerData?.results.diff_current || 'N/A'} /> },
               { renderCustomItem: () => <GridCard title="Total Hashes" text={hashrateToString(minerData?.results.hashes_total || 0, true)} /> },
@@ -266,7 +267,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
           <Text text60>CPU</Text>
         </View>
         <View flex row>
-          <GridView
+          <ItemGrid
             items={[
               {
                 renderCustomItem: () => (
@@ -295,7 +296,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
           <Text text60>Memory</Text>
         </View>
         <View flex row>
-          <GridView
+          <ItemGrid
             items={[
               {
                 renderCustomItem: () => (

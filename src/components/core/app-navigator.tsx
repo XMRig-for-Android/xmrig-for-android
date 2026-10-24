@@ -1,12 +1,10 @@
 import React from 'react';
 import {
-  TabController,
-  View,
   Text,
   ViewProps,
 } from 'react-native-ui-lib';
-
 import { createStackNavigator } from '@react-navigation/stack';
+import { SegmentedTabs } from './segmented-tabs';
 import { RootStackParamList } from '../../core/navigation';
 import { LazyLoader } from './lazy-loader';
 import ConfigurationEditScreen from '../settings/screens/configuration-edit.screen';
@@ -21,15 +19,11 @@ const LazySettings = () => (<LazyLoader><Settings /></LazyLoader>);
 const LazyMiner = () => (<LazyLoader><Miner /></LazyLoader>);
 
 const AppTabs:React.FC<ViewProps> = () => (
-  <TabController items={[{ label: 'Miner' }, { label: 'Settings' }]}>
-    <TabController.TabBar
-      enableShadow
-    />
-    <View flex>
-      <TabController.TabPage index={0}><LazyMiner /></TabController.TabPage>
-      <TabController.TabPage index={1} lazy><LazySettings /></TabController.TabPage>
-    </View>
-  </TabController>
+  <SegmentedTabs
+    items={[{ label: 'Miner' }, { label: 'Settings' }]}
+    pages={[<LazyMiner />, <LazySettings />]}
+    lazyIndexes={[1]}
+  />
 );
 
 export const AppNavigator:React.FC<ViewProps> = () => (
