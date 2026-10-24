@@ -23,12 +23,19 @@ setup_toolchain() {
   [ -n "${TOOLCHAIN_READY:-}" ] && return 0
 
   if [ -z "${ANDROID_HOME:-}" ]; then
-    for candidate in "${ANDROID_SDK_ROOT:-}" "$HOME/Library/Android/sdk" "$HOME/Android/Sdk"; do
-      if [ -n "$candidate" ] && [ -d "$candidate" ]; then
-        export ANDROID_HOME="$candidate"
-        break
-      fi
-    done
+    SETUP_ANDROID_ENV="$ROOT_DIR/scripts/setup-android-env.sh"
+    if [ -x "$SETUP_ANDROID_ENV" ]; then
+      # shellcheck source=/dev/null
+      source "$SETUP_ANDROID_ENV" --quiet
+    else
+      for candidate in "${ANDROID_SDK_ROOT:-}" "$HOME/Library/Android/sdk" "$HOME/Android/Sdk"; do
+        if [ -n "$candidate" ] && [ -d "$candidate" ]; then
+          export ANDROID_HOME="$candidate"
+          export ANDROID_SDK_ROOT="$candidate"
+          break
+        fi
+      done
+    fi
   fi
 
   if [ -z "${ANDROID_NDK_ROOT:-}" ]; then
