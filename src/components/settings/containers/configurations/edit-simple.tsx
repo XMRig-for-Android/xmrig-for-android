@@ -1,26 +1,17 @@
-import React, { Suspense } from 'react';
-import {
-  ScrollView,
-} from 'react-native';
-import {
-  LoaderScreen,
-  View, ViewProps,
-} from 'react-native-ui-lib';
-import {
-  ISimpleConfiguration,
-} from '../../../../core/settings/settings.interface';
+import React from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { ISimpleConfiguration } from '../../../../core/settings/settings.interface';
+import { EditSimpleForkCard } from './edit-simple/edit-simple-fork.card';
+import { EditSimplePoolCard } from './edit-simple/edit-simple-pool.card';
+import { EditSimpleCPUCard } from './edit-simple/edit-simple-cpu.card';
+import { EditSimpleAlgorithemsCard } from './edit-simple/edit-simple-algorithems.card';
 
-const EditSimpleForkCard = React.lazy(() => import('./edit-simple/edit-simple-fork.card'));
-const EditSimplePoolCard = React.lazy(() => import('./edit-simple/edit-simple-pool.card'));
-const EditSimpleCPUCard = React.lazy(() => import('./edit-simple/edit-simple-cpu.card'));
-const EditSimpleAlgorithemsCard = React.lazy(() => import('./edit-simple/edit-simple-algorithems.card'));
-
-type ConfigurationEditSimpleProps = ViewProps & {
-    configuration: ISimpleConfiguration;
-    onUpdate: (configurationData: ISimpleConfiguration) => void;
+type ConfigurationEditSimpleProps = {
+  configuration: ISimpleConfiguration;
+  onUpdate: (configurationData: ISimpleConfiguration) => void;
 };
 
-export const ConfigurationEditSimple:React.FC<ConfigurationEditSimpleProps> = ({
+export const ConfigurationEditSimple: React.FC<ConfigurationEditSimpleProps> = ({
   configuration,
   onUpdate,
 }) => {
@@ -31,17 +22,21 @@ export const ConfigurationEditSimple:React.FC<ConfigurationEditSimpleProps> = ({
   }, [localState]);
 
   return (
-    <Suspense fallback={<LoaderScreen />}>
-      <ScrollView nestedScrollEnabled>
-        <EditSimpleForkCard localState={localState} setLocalState={setLocalState} />
-        <View height={10} />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+      >
         <EditSimplePoolCard localState={localState} setLocalState={setLocalState} />
-        <View height={10} />
+        <EditSimpleForkCard localState={localState} setLocalState={setLocalState} />
         <EditSimpleCPUCard localState={localState} setLocalState={setLocalState} />
-        <View height={10} />
         <EditSimpleAlgorithemsCard localState={localState} setLocalState={setLocalState} />
       </ScrollView>
-    </Suspense>
+    </KeyboardAvoidingView>
   );
 };
 

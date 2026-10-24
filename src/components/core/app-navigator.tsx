@@ -11,17 +11,19 @@ import { palette, radius } from '../../core/theme';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const Settings = React.lazy(() => import('../settings/settings-view'));
 const Miner = React.lazy(() => import('../miner/miner-view'));
+const Profiles = React.lazy(() => import('../settings/screens/configurations.screen'));
+const Settings = React.lazy(() => import('../settings/screens/settings.screen'));
 
-const LazySettings = () => (<LazyLoader><Settings /></LazyLoader>);
 const LazyMiner = () => (<LazyLoader><Miner /></LazyLoader>);
+const LazyProfiles = () => (<LazyLoader><Profiles /></LazyLoader>);
+const LazySettings = () => (<LazyLoader><Settings /></LazyLoader>);
 
 const AppTabs:React.FC<ViewProps> = () => (
   <SegmentedTabs
-    items={[{ label: 'Miner' }, { label: 'Settings' }]}
-    pages={[<LazyMiner />, <LazySettings />]}
-    lazyIndexes={[1]}
+    items={[{ label: 'Miner' }, { label: 'Profiles' }, { label: 'Settings' }]}
+    pages={[<LazyMiner />, <LazyProfiles />, <LazySettings />]}
+    lazyIndexes={[1, 2]}
   />
 );
 
@@ -56,7 +58,7 @@ export const AppNavigator:React.FC<ViewProps> = () => (
       component={ConfigurationEditScreen}
       getId={({ params }: any) => params.id}
       options={{
-        title: 'Configuration',
+        title: 'Edit profile',
         headerShadowVisible: false,
         headerStyle: { backgroundColor: palette.background },
         headerTitleStyle: styles.screenTitle,

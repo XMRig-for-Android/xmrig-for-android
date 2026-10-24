@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Colors } from 'react-native-ui-lib';
+import { textFieldStyles } from '../../../core/ui';
 
 export type IPoolState = {
     hostname: string;
@@ -106,8 +106,7 @@ export {
 
 export const sharedStyles = StyleSheet.create({
   withUnderline: {
-    borderBottomWidth: 1,
-    borderColor: Colors.$outlineDisabled,
-    paddingBottom: 4,
+    ...textFieldStyles.fieldStyle,
+    marginTop: 6,
   },
 });

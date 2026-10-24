@@ -1,157 +1,236 @@
-import _ from 'lodash';
 import React from 'react';
 import {
-  Button, Chip, Colors, Dialog, DialogProps, Picker, Typography, View,
-} from 'react-native-ui-lib';
+  KeyboardAvoidingView,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { IConfiguratioPropertiesPool } from '../../../core/settings/settings.interface';
 import { validateWalletAddress } from '../../../core/utils';
+import { palette, radius } from '../../../core/theme';
+import { Badge, Button } from '../../core/ui';
 import {
   C3Pool,
   Hashcity,
   HashVault,
+  IPool,
   IPoolState,
-  IPredefinedPool,
-  IPredefinedPoolInfo,
   MineXMR,
   MoneroOcean,
   Nano,
   PredefinedPoolName,
-  predefinedPools,
   predefinedPoolsList,
   SupportXMR,
   XMRPoolEU,
 } from './pools';
 
-export type PoolListModalProps = DialogProps & {
+export type PoolListModalProps = {
+  visible: boolean;
   onAdd: (pool: IConfiguratioPropertiesPool) => void;
-}
+  onDismiss: () => void;
+};
 
-const PoolListModal:React.FC<PoolListModalProps> = (
-  {
-    onAdd,
-    onDismiss,
-    ...rest
-  },
-) => {
-  const [selected, setSelected] = React.useState<string>();
-  const [pool, setPool] = React.useState<IConfiguratioPropertiesPool>({
-    hostname: '',
-    port: 0,
-    username: '',
-    password: '',
-    sslEnabled: false,
-  });
+const poolForms: Record<PredefinedPoolName, React.FC<IPool>> = {
+  [PredefinedPoolName.MoneroOcean]: MoneroOcean,
+  [PredefinedPoolName.MineXMR]: MineXMR,
+  [PredefinedPoolName.SupportXMR]: SupportXMR,
+  [PredefinedPoolName.nanopool]: Nano,
+  [PredefinedPoolName.C3Pool]: C3Pool,
+  [PredefinedPoolName.XMRPoolEU]: XMRPoolEU,
+  [PredefinedPoolName.HashVault]: HashVault,
+  [PredefinedPoolName.Hashcity]: Hashcity,
+};
+
+const emptyPool: IConfiguratioPropertiesPool = {
+  hostname: '',
+  port: 0,
+  username: '',
+  password: '',
+  sslEnabled: false,
+};
+
+const PoolListModal: React.FC<PoolListModalProps> = ({
+  visible,
+  onAdd,
+  onDismiss,
+}) => {
+  const [selected, setSelected] = React.useState<PredefinedPoolName>();
+  const [pool, setPool] = React.useState<IConfiguratioPropertiesPool>(emptyPool);
+
+  React.useEffect(() => {
+    if (visible) {
+      setSelected(undefined);
+      setPool(emptyPool);
+    }
+  }, [visible]);
 
   const onChange = React.useCallback(
-    (state: IPoolState) => setPool({
-      hostname: state.hostname,
-      port: state.port,
-      username: state.username,
-      password: state.password,
-      sslEnabled: false,
-    }),
+    (state: IPoolState) => setPool({ ...state, sslEnabled: false }),
     [],
   );
 
-  const pools = React.useMemo<IPredefinedPool[]>(() => predefinedPoolsList, []);
-  const poolInfo = React.useMemo<IPredefinedPoolInfo>(
-    () => predefinedPools[selected as PredefinedPoolName],
-    [selected],
-  );
+  const canApply = !!selected && !!pool.hostname && !!pool.port
+    && validateWalletAddress(pool.username);
 
-  const hide = (isOk: boolean = false) => {
-    if (isOk === true) {
-      onAdd(pool);
-    }
-    if (onDismiss) {
-      onDismiss();
-    }
-  };
+  const PoolForm = selected ? poolForms[selected] : undefined;
 
   return (
-    <Dialog
-      onDismiss={onDismiss}
-      center
-      headerProps={{
-        title: 'Pools Presets',
-      }}
-      containerStyle={{ width: '100%', minWidth: 300 }}
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      {...rest}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onDismiss}
     >
-      <View spread style={{ flexGrow: 1 }}>
-        <View paddingH-20>
-          <View height={50} paddingT-10>
-            <Picker
-              floatingPlaceholder={selected == null}
-              placeholder="Select a Pool"
-              topBarProps={{ title: 'Pools' }}
-              value={selected}
-              showSearch
-              searchPlaceholder="Search a Configurations"
-              onChange={(value: any) => setSelected(value)}
-              style={{ ...Typography.text60, color: Colors.$textDefault }}
-              floatingPlaceholderStyle={{ ...Typography.text70, color: Colors.$textDefault }}
-            >
-              {_.map(pools, (item: IPredefinedPool) => (
-                <Picker.Item
-                  key={item.name}
-                  value={item.name}
-                  label={item.info.displayName}
-                />
-              ))}
-            </Picker>
-          </View>
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior="padding"
+      >
+        <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} />
+        <View style={styles.sheet}>
+          <View style={styles.grabber} />
+          <Text style={styles.title}>Pool presets</Text>
+          <Text style={styles.subtitle}>
+            {selected ? 'Enter your wallet to finish.' : 'Pick a pool. Host and port are filled in for you.'}
+          </Text>
 
-          {poolInfo && (
-            <View row paddingB-10 spread>
-              <Chip size={10} label={`${poolInfo.fee}% fee`} />
-              <Chip size={10} label={`${poolInfo.threshold} min. payout`} marginH-10 />
-              <Chip size={10} label={poolInfo.method} />
-            </View>
-          )}
-
-          <View spread paddingB-20>
-            {selected && selected === PredefinedPoolName.MoneroOcean
-              && <MoneroOcean onChange={onChange} />}
-            {selected && selected === PredefinedPoolName.MineXMR
-              && <MineXMR onChange={onChange} /> }
-            {selected && selected === PredefinedPoolName.SupportXMR
-              && <SupportXMR onChange={onChange} /> }
-            {selected && selected === PredefinedPoolName.nanopool
-              && <Nano onChange={onChange} /> }
-            {selected && selected === PredefinedPoolName.C3Pool
-              && <C3Pool onChange={onChange} /> }
-            {selected && selected === PredefinedPoolName.XMRPoolEU
-              && <XMRPoolEU onChange={onChange} /> }
-            {selected && selected === PredefinedPoolName.HashVault
-              && <HashVault onChange={onChange} /> }
-            {selected && selected === PredefinedPoolName.Hashcity
-              && <Hashcity onChange={onChange} /> }
-          </View>
-
-        </View>
-        <View bottom>
-          <View height={1.5} bg-grey70 />
-          <View paddingV-15 paddingH-20 right row centerV>
-            <Button
-              disabled={
-                !selected
-                || !pool.hostname
-                || !pool.port
-                || !validateWalletAddress(pool.username)
+          <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
+            {predefinedPoolsList.map((item) => {
+              const isSelected = item.name === selected;
+              if (selected && !isSelected) {
+                return null;
               }
-              onPress={() => hide(true)}
-              marginR-10
-              label="Save"
-              size={Button.sizes.medium}
+              return (
+                <Pressable
+                  key={item.name}
+                  onPress={() => {
+                    setSelected(isSelected ? undefined : item.name);
+                    setPool(emptyPool);
+                  }}
+                  style={[styles.poolRow, isSelected && styles.poolRowSelected]}
+                >
+                  <View style={styles.flex}>
+                    <Text style={styles.poolName}>{item.info.displayName}</Text>
+                    <View style={styles.badges}>
+                      <Badge label={`${item.info.fee}% fee`} tone={item.info.fee === 0 ? 'success' : 'neutral'} />
+                      <Badge label={item.info.method} />
+                      <Badge label={`${item.info.threshold} XMR min`} />
+                    </View>
+                  </View>
+                  <Text style={styles.change}>{isSelected ? 'Change' : '›'}</Text>
+                </Pressable>
+              );
+            })}
+            {PoolForm ? (
+              <View style={styles.form}>
+                <PoolForm onChange={onChange} />
+              </View>
+            ) : null}
+          </ScrollView>
+
+          <View style={styles.actions}>
+            <Button label="Cancel" variant="ghost" onPress={onDismiss} style={styles.flex} />
+            <Button
+              label="Apply preset"
+              disabled={!canApply}
+              onPress={() => {
+                onAdd(pool);
+                onDismiss();
+              }}
+              style={styles.flex2}
             />
-            <Button onPress={onDismiss} label="Cancel" backgroundColor={Colors.$backgroundDangerHeavy} size={Button.sizes.medium} />
           </View>
         </View>
-      </View>
-    </Dialog>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(14, 16, 34, 0.45)',
+  },
+  sheet: {
+    maxHeight: '88%',
+    backgroundColor: palette.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 28,
+  },
+  grabber: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: palette.track,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: palette.ink,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    marginTop: 2,
+    marginBottom: 14,
+    fontSize: 13,
+    color: palette.inkSubtle,
+  },
+  scroll: {
+    flexGrow: 0,
+  },
+  poolRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: palette.track,
+    padding: 14,
+    marginBottom: 10,
+  },
+  poolRowSelected: {
+    borderColor: palette.accent,
+    backgroundColor: palette.accentSoft,
+  },
+  poolName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: palette.ink,
+  },
+  badges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  change: {
+    marginLeft: 10,
+    fontSize: 14,
+    fontWeight: '700',
+    color: palette.accent,
+  },
+  form: {
+    paddingTop: 4,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+  },
+  flex: {
+    flex: 1,
+  },
+  flex2: {
+    flex: 2,
+  },
+});
 
 export default PoolListModal;

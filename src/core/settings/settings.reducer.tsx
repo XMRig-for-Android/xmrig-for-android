@@ -45,7 +45,7 @@ export const SettingsReducer:Reducer<ISettings, ISettingsReducerAction> = (
           ...prevState.configurations,
           {
             ...newConfig,
-            id: uuid.v4(),
+            id: newConfig.id || uuid.v4(),
           },
         ],
       } as ISettings;

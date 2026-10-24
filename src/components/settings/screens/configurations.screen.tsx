@@ -1,143 +1,104 @@
 import React from 'react';
-import {
-  Assets, Button, ButtonProps, Colors, FloatingButton, Text, View,
-} from 'react-native-ui-lib';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import uuid from 'react-native-uuid';
 import { SettingsActionType, SettingsContext } from '../../../core/settings';
+import { RootStackParamList } from '../../../core/navigation';
 import { ConfigurationsListView } from '../containers/configurations/list-view';
 import AddConfigurationsModal from '../modals/add-configuration.modal';
-
-const actionsButtonDefault: ButtonProps = {
-  label: 'Menu',
-  iconSource: Assets.icons.barsOpen,
-  iconStyle: {
-    width: 22,
-    height: 22,
-    margin: 0,
-    tintColor: Colors.$iconDefaultLight,
-  },
-};
+import { Button, ScreenHeader } from '../../core/ui';
+import { palette, radius } from '../../../core/theme';
 
 const ConfigurationsScreen: React.FC = () => {
   const { settings, settingsDispatcher } = React.useContext(SettingsContext);
-  const [showAddNewDialogVisible, setShowAddNewDialogVisible] = React.useState<boolean>(false);
-  React.useEffect(() => setActionVisible(false), [showAddNewDialogVisible]);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [addVisible, setAddVisible] = React.useState<boolean>(false);
 
-  const [selected, setSelected] = React.useState<string[]>([]);
-
-  const [actionsVisible, setActionVisible] = React.useState<boolean>(false);
-  const [actionsButtonProps, setActionButtonProps] = React.useState<ButtonProps>({
-    ...actionsButtonDefault,
-  });
-  React.useEffect(() => {
-    if (actionsVisible) {
-      setActionButtonProps({
-        iconSource: Assets.icons.barsClose,
-        iconStyle: {
-          width: 15,
-          height: 15,
-          margin: 8,
-          tintColor: Colors.$iconDefaultLight,
-        },
-        backgroundColor: selected.length > 0
-          ? Colors.$backgroundDangerHeavy : Colors.$backgroundPrimaryHeavy,
-      });
-    } else {
-      setActionButtonProps({
-        ...actionsButtonDefault,
-        backgroundColor: selected.length > 0
-          ? Colors.$backgroundDangerHeavy : Colors.$backgroundPrimaryHeavy,
-      });
-    }
-  }, [actionsVisible, selected]);
+  const count = settings.configurations.length;
 
   return (
-    <View bg-screenBG flex>
+    <View style={styles.screen}>
       <AddConfigurationsModal
+        visible={addVisible}
+        onDismiss={() => setAddVisible(false)}
         onAdd={(name, mode) => {
-          console.log('onAdd', name, mode);
+          const id = uuid.v4() as string;
           settingsDispatcher({
             type: SettingsActionType.ADD_CONFIGURATION,
-            value: {
-              name,
-              mode,
-            },
+            value: { id, name, mode },
           });
-          setShowAddNewDialogVisible(false);
-        }}
-        onDismiss={() => setShowAddNewDialogVisible(false)}
-        visible={showAddNewDialogVisible}
-      />
-      <View
-        row
-        spread
-        paddingV-10
-        paddingH-10
-        centerV
-      >
-        <View row centerV>
-          <Text text60>Configuration Profiles</Text>
-        </View>
-        <Button
-          size={Button.sizes.small}
-          onPress={() => setActionVisible(!actionsVisible)}
-          animateLayout
-          // eslint-disable-next-line react/jsx-props-no-spreading
-          {...actionsButtonProps}
-        />
-      </View>
-      <View
-        flex
-        paddingH-10
-        paddingB-10
-        useSafeArea
-        style={{ zIndex: 0 }}
-      >
-        <ConfigurationsListView
-          configurations={settings.configurations}
-          onSelected={setSelected}
-        />
-      </View>
-      <FloatingButton
-        duration={500}
-        visible={actionsVisible}
-        button={{
-          size: Button.sizes.large,
-          onPress: () => setShowAddNewDialogVisible(true),
-          backgroundColor: Colors.$backgroundPrimaryHeavy,
-          label: 'Add Configuration',
-          iconSource: Assets.icons.clipboard,
-          iconStyle: {
-            display: 'flex',
-            width: 16,
-            height: 20,
-            tintColor: Colors.$iconDefaultLight,
-          },
-        }}
-        secondaryButton={{
-          size: Button.sizes.medium,
-          label: `Delete (${selected.length}) Selected`,
-          onPress: () => {
-            settingsDispatcher({
-              type: SettingsActionType.DELETE_CONFIGURATIONS,
-              value: selected,
-            });
-            setSelected([]);
-            setActionVisible(false);
-          },
-          backgroundColor: Colors.$backgroundDangerHeavy,
-          link: false,
-          animateLayout: true,
-          iconSource: Assets.icons.trash,
-          iconStyle: {
-            display: 'flex',
-            width: 16,
-            height: 20,
-            tintColor: Colors.$iconDefaultLight,
-          },
+          if (!settings.selectedConfiguration) {
+            settingsDispatcher({ type: SettingsActionType.SET_SELECTED_CONFIGURAION, value: id });
+          }
+          setAddVisible(false);
+          navigation.navigate('Configuration', { id });
         }}
       />
+      <ScreenHeader
+        title="Profiles"
+        subtitle={count > 0 ? `${count} saved · tap a profile to edit` : 'Pool and miner presets'}
+        action={count > 0 ? <Button label="+  New" size="sm" onPress={() => setAddVisible(true)} /> : null}
+      />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {count > 0 ? (
+          <ConfigurationsListView
+            configurations={settings.configurations}
+            activeId={settings.selectedConfiguration}
+            onActivate={(id) => settingsDispatcher({
+              type: SettingsActionType.SET_SELECTED_CONFIGURAION,
+              value: id,
+            })}
+          />
+        ) : (
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>No profiles yet</Text>
+            <Text style={styles.emptyText}>
+              A profile holds your pool, wallet and CPU settings.
+              Create one to start mining.
+            </Text>
+            <Button label="Create profile" onPress={() => setAddVisible(true)} style={styles.emptyButton} />
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: palette.background,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
+  empty: {
+    alignItems: 'center',
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: palette.track,
+    paddingVertical: 36,
+    paddingHorizontal: 28,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: palette.ink,
+  },
+  emptyText: {
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: palette.inkMuted,
+    textAlign: 'center',
+  },
+  emptyButton: {
+    marginTop: 20,
+    alignSelf: 'stretch',
+  },
+});
 
 export default ConfigurationsScreen;
