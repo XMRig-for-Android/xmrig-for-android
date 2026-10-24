@@ -1,0 +1,191 @@
+diff --git a/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/adb.js b/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/adb.js
+index 3ab2a50..68ce497 100644
+--- a/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/adb.js
++++ b/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/adb.js
+@@ -25,33 +25,46 @@ function _cliTools() {
+   };
+   return data;
+ }
++function _path() {
++  const data = require("path");
++  _path = function () {
++    return data;
++  };
++  return data;
++}
++const ensureProjectAndroidSdkEnv = () => {
++  try {
++    const projectRoot = (0, _cliTools().findProjectRoot)();
++    return require(_path().join(projectRoot, 'scripts/resolve-android-sdk.js')).ensureAndroidSdkEnv(projectRoot);
++  } catch {
++    return null;
++  }
++};
+ var _default = {
+   label: 'Adb',
++  isRequired: false,
+   description: 'Required to verify if the android device is attached correctly',
+   getDiagnostics: async () => {
+-    const adbPath = (0, _cliPlatformAndroid().getAdbPath)();
++    let adbPath;
++    try {
++      const projectRoot = (0, _cliTools().findProjectRoot)();
++      const resolver = require(_path().join(projectRoot, 'scripts/resolve-android-sdk.js'));
++      resolver.ensureAndroidSdkEnv(projectRoot);
++      adbPath = resolver.resolveAdbPath(process.env.ANDROID_HOME);
++    } catch {
++      ensureProjectAndroidSdkEnv();
++      adbPath = (0, _cliPlatformAndroid().getAdbPath)();
++    }
+     const devices = _cliPlatformAndroid().adb.getDevices(adbPath);
+     if (devices.length > 0) {
+-      const adbArgs = ['reverse', '--list'];
+-      const reverseList = (0, _child_process().execFileSync)(adbPath, adbArgs, {
+-        encoding: 'utf8'
+-      });
+-      if (reverseList.length > 0) {
+-        return {
+-          needsToBeFixed: false
+-        };
+-      } else {
+-        return {
+-          description: 'The reverse proxy for the Android device has not been set.',
+-          needsToBeFixed: true
+-        };
+-      }
+-    } else {
+       return {
+-        description: 'No devices and/or emulators connected. Please create emulator with Android Studio or connect Android device.',
+-        needsToBeFixed: true
++        needsToBeFixed: false
+       };
+     }
++    return {
++      description: 'No devices and/or emulators connected. Please create emulator with Android Studio or connect Android device.',
++      needsToBeFixed: true
++    };
+   },
+   runAutomaticFix: async ({
+     loader,
+diff --git a/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidHomeEnvVariable.js b/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidHomeEnvVariable.js
+index bb07be1..7f6268b 100644
+--- a/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidHomeEnvVariable.js
++++ b/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidHomeEnvVariable.js
+@@ -11,7 +11,29 @@ function _chalk() {
+   };
+   return data;
+ }
++function _cliTools() {
++  const data = require("@react-native-community/cli-tools");
++  _cliTools = function () {
++    return data;
++  };
++  return data;
++}
++function _path() {
++  const data = require("path");
++  _path = function () {
++    return data;
++  };
++  return data;
++}
+ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++const ensureProjectAndroidSdkEnv = () => {
++  try {
++    const projectRoot = (0, _cliTools().findProjectRoot)();
++    return require(_path().join(projectRoot, 'scripts/resolve-android-sdk.js')).ensureAndroidSdkEnv(projectRoot);
++  } catch {
++    return null;
++  }
++};
+ // List of answers on how to set `ANDROID_HOME` for each platform
+ const URLS = {
+   darwin: 'https://stackoverflow.com/a/28296325/4252781',
+@@ -28,9 +50,12 @@ const message = `Read more about how to set the ${label} at ${_chalk().default.d
+ var _default = {
+   label,
+   description,
+-  getDiagnostics: async () => ({
+-    needsToBeFixed: !process.env.ANDROID_HOME
+-  }),
++  getDiagnostics: async () => {
++    ensureProjectAndroidSdkEnv();
++    return {
++      needsToBeFixed: !process.env.ANDROID_HOME
++    };
++  },
+   runAutomaticFix: async ({
+     loader,
+     logManualInstallation
+diff --git a/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidSDK.js b/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidSDK.js
+index 361fcf8..0ba3c6d 100644
+--- a/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidSDK.js
++++ b/node_modules/@react-native-community/cli-doctor/build/tools/healthchecks/androidSDK.js
+@@ -36,6 +36,16 @@ var _downloadAndUnzip = require("../downloadAndUnzip");
+ var _androidWinHelpers = require("../windows/androidWinHelpers");
+ var _environmentVariables = require("../windows/environmentVariables");
+ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
++const ensureProjectAndroidSdkEnv = projectRoot => {
++  if (!projectRoot) {
++    return null;
++  }
++  try {
++    return require(_path().default.join(projectRoot, 'scripts/resolve-android-sdk.js')).ensureAndroidSdkEnv(projectRoot);
++  } catch {
++    return null;
++  }
++};
+ const getBuildToolsVersion = (projectRoot = '') => {
+   try {
+     // doctor is a detached command, so we may not be in a RN project.
+@@ -60,6 +70,18 @@ const getBuildToolsVersion = (projectRoot = '') => {
+   .match(/\d|\../g) || []).join('');
+   return buildToolsVersion || 'Not Found';
+ };
++const getBuildToolsFromFilesystem = projectRoot => {
++  ensureProjectAndroidSdkEnv(projectRoot);
++  const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
++  if (!sdkRoot) {
++    return [];
++  }
++  const buildToolsDir = _path().default.join(sdkRoot, 'build-tools');
++  if (!_fs().default.existsSync(buildToolsDir)) {
++    return [];
++  }
++  return _fs().default.readdirSync(buildToolsDir).filter(entry => /^\d/.test(entry)).sort();
++};
+ const installMessage = `Read more about how to update Android SDK at ${_chalk().default.dim('https://developer.android.com/studio')}`;
+ const isSDKInstalled = environmentInfo => {
+   const version = environmentInfo.SDKs['Android SDK'];
+@@ -71,9 +93,15 @@ var _default = {
+   getDiagnostics: async ({
+     SDKs
+   }, config) => {
+-    const requiredVersion = getBuildToolsVersion(config === null || config === void 0 ? void 0 : config.root);
+-    const buildTools = typeof SDKs['Android SDK'] === 'string' ? SDKs['Android SDK'] : SDKs['Android SDK']['Build Tools'];
+-    const isAndroidSDKInstalled = Array.isArray(buildTools);
++    const projectRoot = config === null || config === void 0 ? void 0 : config.root;
++    ensureProjectAndroidSdkEnv(projectRoot);
++    const requiredVersion = getBuildToolsVersion(projectRoot);
++    const androidSdk = SDKs['Android SDK'];
++    let buildTools = androidSdk && typeof androidSdk === 'object' ? androidSdk['Build Tools'] : androidSdk;
++    if (!Array.isArray(buildTools)) {
++      buildTools = getBuildToolsFromFilesystem(projectRoot);
++    }
++    const isAndroidSDKInstalled = Array.isArray(buildTools) && buildTools.length > 0;
+     const isRequiredVersionInstalled = isAndroidSDKInstalled ? buildTools.includes(requiredVersion) : false;
+     return {
+       versions: isAndroidSDKInstalled ? buildTools : SDKs['Android SDK'],
+diff --git a/node_modules/@react-native-community/cli-doctor/build/tools/versionRanges.js b/node_modules/@react-native-community/cli-doctor/build/tools/versionRanges.js
+index 7219465..5b1790f 100644
+--- a/node_modules/@react-native-community/cli-doctor/build/tools/versionRanges.js
++++ b/node_modules/@react-native-community/cli-doctor/build/tools/versionRanges.js
+@@ -11,7 +11,7 @@ var _default = {
+   NPM: '>= 4.x',
+   BUN: '>= 1.0.0',
+   RUBY: '>= 2.6.10',
+-  JAVA: '>= 17 <= 20',
++  JAVA: '>= 17 <= 23',
+   // Android
+   ANDROID_SDK: '>= 33.x',
+   ANDROID_NDK: '>= 23.x',

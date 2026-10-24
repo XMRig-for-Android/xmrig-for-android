@@ -4,23 +4,67 @@
 #   source scripts/setup-android-env.sh
 #   eval "$(scripts/setup-android-env.sh --print)"
 
-set -eo pipefail
-
 if [ -n "${BASH_VERSION:-}" ]; then
   _SETUP_ANDROID_ENV="${BASH_SOURCE[0]}"
 elif [ -n "${ZSH_VERSION:-}" ]; then
-  _SETUP_ANDROID_ENV="${(%):-%x}"
+  _SETUP_ANDROID_ENV="${(%):-%N}"
 else
   _SETUP_ANDROID_ENV="$0"
 fi
+
+_is_sourced() {
+  if [ -n "${BASH_VERSION:-}" ]; then
+    [ "${BASH_SOURCE[0]:-}" != "${0:-}" ] && return 0
+  fi
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    case "${ZSH_EVAL_CONTEXT:-}" in
+      *:file:* | *:file | file:* | *file*) return 0 ;;
+    esac
+    case "${0:-}" in
+      zsh | -zsh | bash | -bash | sh | -sh | ksh | -ksh) return 0 ;;
+    esac
+  fi
+  return 1
+}
+
+# zsh must not parse this bash script — delegate to bash and return to the shell.
+if [ -n "${ZSH_VERSION:-}" ] && _is_sourced; then
+  _quiet=0
+  for _arg in "$@"; do
+    [ "$_arg" = "--quiet" ] && _quiet=1
+  done
+  if ! eval "$(/usr/bin/env bash "$_SETUP_ANDROID_ENV" --print)"; then
+    echo "Error: failed to configure Android SDK environment." >&2
+    return 1
+  fi
+  if [ "$_quiet" -eq 0 ]; then
+    echo "ANDROID_HOME=$ANDROID_HOME"
+    echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+  fi
+  unset _arg _quiet
+  return 0
+fi
+
+_IS_SOURCED=0
+if _is_sourced; then
+  _IS_SOURCED=1
+fi
+
+_script_finish() {
+  local code="${1:-0}"
+  if [ "$_IS_SOURCED" -eq 1 ]; then
+    return "$code"
+  fi
+  exit "$code"
+}
+
 SCRIPT_DIR="$(cd "$(dirname "$_SETUP_ANDROID_ENV")" && pwd)"
-unset _SETUP_ANDROID_ENV
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 LOCAL_PROPERTIES="$REPO_ROOT/android/local.properties"
 
 is_android_sdk() {
   local dir="${1%/}"
-  [ -n "$dir" ] && [ -d "$dir" ] && [ -d "$dir/platform-tools" ]
+  [ -n "$dir" ] && [ -d "$dir" ] && { [ -d "$dir/platform-tools" ] || [ -d "$dir/build-tools" ]; }
 }
 
 sdk_from_local_properties() {
@@ -115,13 +159,13 @@ while [ $# -gt 0 ]; do
       QUIET=1
       shift
       ;;
-    -h|--help)
-      sed -n '2,6p' "$0"
-      exit 0
+    -h | --help)
+      sed -n '2,6p' "$_SETUP_ANDROID_ENV"
+      _script_finish 0
       ;;
     *)
       echo "Unknown option: $1" >&2
-      exit 1
+      _script_finish 1
       ;;
   esac
 done
@@ -129,18 +173,27 @@ done
 SDK_PATH="$(find_android_sdk || true)"
 if [ -z "$SDK_PATH" ]; then
   echo "Error: Android SDK not found. Install Android Studio or set ANDROID_HOME." >&2
-  exit 1
+  _script_finish 1
+fi
+
+if [[ "$SDK_PATH" == *$'\n'* ]]; then
+  echo "Error: resolved Android SDK path contains a newline; check android/local.properties." >&2
+  _script_finish 1
 fi
 
 export ANDROID_HOME="$SDK_PATH"
 export ANDROID_SDK_ROOT="$SDK_PATH"
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
 
+if [ -w "$REPO_ROOT/android" ] && is_android_sdk "$ANDROID_HOME"; then
+  printf 'sdk.dir=%s\n' "$ANDROID_HOME" >"$LOCAL_PROPERTIES"
+fi
+
 if [ "$PRINT_ONLY" -eq 1 ]; then
   printf 'export ANDROID_HOME=%q\n' "$ANDROID_HOME"
   printf 'export ANDROID_SDK_ROOT=%q\n' "$ANDROID_SDK_ROOT"
   printf 'export PATH=%q\n' "$PATH"
-  exit 0
+  _script_finish 0
 fi
 
 if [ "$QUIET" -eq 0 ]; then

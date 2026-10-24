@@ -20,7 +20,9 @@
     "start": "react-native start",
     "test": "jest",
     "test:resnapshot": "jest -u",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "doctor": "bash scripts/run-react-native-doctor.sh",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@brightlayer-ui/react-native-progress-icons": "^1.0.2",
@@ -80,6 +82,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^4.6.2",
+    "patch-package": "^8.0.1",
     "typescript": "^5.7.3"
   },
   "engines": {
