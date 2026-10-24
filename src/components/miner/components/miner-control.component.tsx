@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import {
   Picker,
   View,
@@ -91,14 +92,10 @@ export const MinerControl:React.FC<ViewProps> = () => {
       size={Button.sizes.small}
       onPress={handleStart}
       label="Start"
+      borderRadius={22}
       iconSource={Assets.icons.start}
-      iconStyle={{
-        width: 8,
-        height: 10,
-        margin: 5,
-        marginRight: 10,
-        tintColor: Colors.$iconDefaultLight,
-      }}
+      style={styles.actionButton}
+      iconStyle={styles.startIcon}
     />
   );
 
@@ -108,32 +105,29 @@ export const MinerControl:React.FC<ViewProps> = () => {
       backgroundColor={Colors.$backgroundDangerHeavy}
       onPress={handleStop}
       label="Stop"
+      borderRadius={22}
       iconSource={Assets.icons.stop}
-      iconStyle={{
-        width: 12,
-        height: 12,
-        margin: 5,
-        marginRight: 10,
-        tintColor: Colors.$iconDefaultLight,
-      }}
+      style={styles.actionButton}
+      iconStyle={styles.stopIcon}
     />
   );
 
   return (
     <Card
       enableShadow
-      selected={workingState !== WorkingState.MINING}
-      selectionOptions={{
-        hideIndicator: true,
-        color: cardBorderColor,
+      borderRadius={22}
+      containerStyle={{
+        overflow: 'hidden',
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: cardBorderColor,
       }}
-      containerStyle={{ overflow: 'hidden' }}
     >
-      <View row centerV paddingL-16 paddingR-12 paddingV-14>
+      <View row centerV paddingL-18 paddingR-14 paddingV-16>
         <View flex marginR-12>
           {workingState === WorkingState.NOT_WORKING ? (
             <>
-              <Text text90 $textNeutral marginB-2>Configuration</Text>
+              <Text style={styles.eyebrow}>Configuration</Text>
               <Picker
                 placeholder="Select a configuration"
                 topBarProps={{ title: 'Configurations' }}
@@ -159,8 +153,8 @@ export const MinerControl:React.FC<ViewProps> = () => {
             </>
           ) : (
             <>
-              <Text text90 $textNeutral marginB-2>Status</Text>
-              <Text text60 $textDefault>{workingState}</Text>
+              <Text style={styles.eyebrow}>Status</Text>
+              <Text style={styles.configName}>{workingState}</Text>
             </>
           )}
         </View>
@@ -178,3 +172,36 @@ export const MinerControl:React.FC<ViewProps> = () => {
     </Card>
   );
 };
+
+const styles = StyleSheet.create({
+  eyebrow: {
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    color: Colors.$textNeutral,
+    marginBottom: 2,
+  },
+  configName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.$textDefault,
+  },
+  actionButton: {
+    minWidth: 96,
+  },
+  startIcon: {
+    width: 8,
+    height: 10,
+    margin: 5,
+    marginRight: 8,
+    tintColor: Colors.$iconDefaultLight,
+  },
+  stopIcon: {
+    width: 12,
+    height: 12,
+    margin: 5,
+    marginRight: 8,
+    tintColor: Colors.$iconDefaultLight,
+  },
+});

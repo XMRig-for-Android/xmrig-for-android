@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { View, Text, Colors } from 'react-native-ui-lib';
 import { Battery } from '@brightlayer-ui/react-native-progress-icons';
 import chroma from 'chroma-js';
@@ -37,18 +37,16 @@ const MinerScreen = () => {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: 16 }}
         >
-          <View flex row spread centerV>
-            <Text text60>Miner Statistics</Text>
-            <View flex flex-1 right paddingH-10>
-              <Text text80>
-                {CPUTemp.toFixed(2)}
-                {' ℃'}
+          <View row spread centerV marginB-4>
+            <Text style={styles.screenTitle}>Overview</Text>
+            <View row centerV style={styles.statusChip}>
+              <Text style={styles.tempText}>
+                {CPUTemp.toFixed(1)}
+                °C
               </Text>
-            </View>
-            <View padding-0 margin-0>
               <Battery
                 percent={powerContext.batteryLevel}
-                size={40}
+                size={26}
                 color={battryColor}
                 charging={powerContext.isPowerConnected}
                 outlined={false}
@@ -65,5 +63,27 @@ const MinerScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  screenTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.$textDefault,
+    letterSpacing: -0.3,
+  },
+  statusChip: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingVertical: 6,
+    gap: 6,
+  },
+  tempText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.$textNeutral,
+  },
+});
 
 export default MinerScreen;

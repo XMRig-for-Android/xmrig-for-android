@@ -36,12 +36,13 @@ export const AppNavigator:React.FC<ViewProps> = () => (
         // eslint-disable-next-line react/jsx-one-expression-per-line
       options={{
         title: 'XMRig for Android',
-        headerTitleContainerStyle: { marginLeft: 10 },
-        headerRightContainerStyle: { marginRight: 10 },
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: '#F7F8FA' },
+        headerTitleStyle: { fontWeight: '700', fontSize: 18 },
+        headerTitleContainerStyle: { marginLeft: 8 },
+        headerRightContainerStyle: { marginRight: 12 },
         headerRight: () => (
-          <Text>
-            Version
-            {' '}
+          <Text style={{ fontSize: 12, color: '#8B909A', fontWeight: '600' }}>
             {version}
           </Text>
         ),

@@ -35,30 +35,23 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
   };
 
   const bar = (
-    <View row style={tabBarStyle}>
-      {items.map((item, itemIndex) => {
-        const selected = itemIndex === index;
-        return (
-          <Pressable
-            key={item.label}
-            style={styles.tab}
-            onPress={() => select(itemIndex)}
-          >
-            <Text
-              text80
-              style={{ color: selected ? Colors.$textPrimary : Colors.$textNeutral }}
+    <View style={[tabBarPosition === 'bottom' ? styles.bottomWrap : styles.topWrap, tabBarStyle]}>
+      <View row style={styles.track}>
+        {items.map((item, itemIndex) => {
+          const selected = itemIndex === index;
+          return (
+            <Pressable
+              key={item.label}
+              style={[styles.tab, selected ? styles.tabSelected : undefined]}
+              onPress={() => select(itemIndex)}
             >
-              {item.label}
-            </Text>
-            <View
-              style={[
-                styles.indicator,
-                { backgroundColor: selected ? Colors.$backgroundPrimaryHeavy : 'transparent' },
-              ]}
-            />
-          </Pressable>
-        );
-      })}
+              <Text style={[styles.tabLabel, selected ? styles.tabLabelSelected : undefined]}>
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 
@@ -93,17 +86,44 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
 };
 
 const styles = StyleSheet.create({
+  topWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  bottomWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  track: {
+    backgroundColor: '#E7E9EE',
+    borderRadius: 16,
+    padding: 4,
+  },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 8,
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
   },
-  indicator: {
-    marginTop: 8,
-    height: 3,
-    width: '40%',
-    borderRadius: 2,
+  tabSelected: {
+    backgroundColor: Colors.white,
+    shadowColor: '#101828',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.$textNeutral,
+  },
+  tabLabelSelected: {
+    fontWeight: '700',
+    color: Colors.$textPrimary,
   },
   content: {
     minHeight: 0,

@@ -21,10 +21,6 @@ const screen = Dimensions.get('screen');
 
 type ChartPoint = { x: number; y: number };
 
-type SmallHashrateChartProps = {
-  hashrateHistoryData: number[];
-};
-
 type GridCardProps = {
   title: string;
   text?: string | number;
@@ -34,7 +30,6 @@ type GridCardProps = {
 type GridHashrateCardProps = {
   title: string;
   subTitle?: string;
-  children?: React.ReactNode;
 };
 
 const toChartData = (values: number[] = []): ChartPoint[] => {
@@ -71,65 +66,21 @@ const HashrateChart: React.FC<{ data: number[] }> = ({ data }) => (
   </View>
 );
 
-const SmallHashrateChart: React.FC<SmallHashrateChartProps> = ({
-  hashrateHistoryData = [],
-}) => (
-  <View flex right style={{ height: 50, width: 100 }}>
-    <CartesianChart
-      data={toChartData(hashrateHistoryData)}
-      xKey="x"
-      yKeys={['y']}
-      domainPadding={{ top: 5 }}
-      frame={{ lineWidth: 0 }}
-    >
-      {({ points, chartBounds }) => (
-        <>
-          <Area
-            points={points.y}
-            y0={chartBounds.bottom}
-            color={Colors.$backgroundPrimaryLight}
-            curveType="natural"
-          />
-          <Line
-            points={points.y}
-            color={Colors.$outlinePrimary}
-            strokeWidth={1}
-            curveType="natural"
-          />
-        </>
-      )}
-    </CartesianChart>
-  </View>
+const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
+  <Text style={styles.sectionTitle}>{title}</Text>
 );
 
 const GridCard: React.FC<GridCardProps> = ({ title, text = '', children = null }) => (
-  <MinerCard title={title}>
-    <Card.Section
-      paddingH-10
-      paddingB-10
-      paddingT-5
-      content={[
-        { text: `${text ?? ''}`, text65: true },
-      ]}
-      style={{
-        borderTopRightRadius: 0,
-        borderTopLeftRadius: 0,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-      }}
-    />
-    {children && children}
+  <MinerCard title={title} value={text}>
+    {children}
   </MinerCard>
 );
 
 const GridHashrateCard: React.FC<GridHashrateCardProps> = ({
   title,
   subTitle = '',
-  children = null,
 }) => (
-  <MinerCard title={title} subTitle={subTitle}>
-    {children}
-  </MinerCard>
+  <MinerCard title={title} value={subTitle} />
 );
 
 type XMRigViewProps = ViewProps & {
@@ -186,60 +137,47 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
         />
       </View>
       <View flex paddingV-10>
-        <View flex row spread paddingB-5 marginB-10 style={styles.sectionDiv}>
-          <Text text60>Hashrate</Text>
-        </View>
+        <SectionTitle title="Hashrate" />
         <View flex row>
           <ItemGrid
+            itemSpacing={10}
             items={[
               {
                 renderCustomItem: () => (
-                  <GridHashrateCard title="10s" subTitle={`${hashrateToString(_.last(hashrateHistory.history10s) || 0, true)}/s`}>
-                    <SmallHashrateChart hashrateHistoryData={hashrateHistory.history10s} />
-                  </GridHashrateCard>
+                  <GridHashrateCard title="10 seconds" subTitle={`${hashrateToString(_.last(hashrateHistory.history10s) || 0, true)}/s`} />
                 ),
               },
               {
                 renderCustomItem: () => (
-                  <GridHashrateCard title="60s" subTitle={`${hashrateToString(_.last(hashrateHistory.history60s) || 0, true)}/s`}>
-                    <SmallHashrateChart hashrateHistoryData={hashrateHistory.history60s} />
-                  </GridHashrateCard>
+                  <GridHashrateCard title="60 seconds" subTitle={`${hashrateToString(_.last(hashrateHistory.history60s) || 0, true)}/s`} />
                 ),
               },
               {
                 renderCustomItem: () => (
-                  <GridHashrateCard title="15m" subTitle={`${hashrateToString(_.last(hashrateHistory.history15m) || 0, true)}/s`}>
-                    <SmallHashrateChart hashrateHistoryData={hashrateHistory.history15m} />
-                  </GridHashrateCard>
+                  <GridHashrateCard title="15 minutes" subTitle={`${hashrateToString(_.last(hashrateHistory.history15m) || 0, true)}/s`} />
                 ),
               },
               {
                 renderCustomItem: () => (
-                  <GridHashrateCard title="max" subTitle={`${hashrateToString(_.last(hashrateHistory.historyMax) || 0, true)}/s`}>
-                    <SmallHashrateChart hashrateHistoryData={hashrateHistory.historyMax} />
-                  </GridHashrateCard>
+                  <GridHashrateCard title="Peak" subTitle={`${hashrateToString(_.last(hashrateHistory.historyMax) || 0, true)}/s`} />
                 ),
               },
             ]}
-            numColumns={4}
+            numColumns={2}
             viewWidth={dimensions.width}
           />
         </View>
-        <View flex row paddingT-10 style={{ zIndex: 0 }}>
+        <View flex row paddingT-12>
           <MinerCard
-            title="Live Hashrate"
+            title="Live"
             subTitle={`${hashrateToString(_.last(hashrateHistory.historyCurrent) || 0, true)}/s`}
-            cardProps={{ row: true, center: true }}
-            badgeProps={{ size: 20 }}
           >
             <HashrateChart data={hashrateHistory.historyCurrent || []} />
           </MinerCard>
         </View>
       </View>
       <View flex paddingV-10>
-        <View flex row spread paddingB-5 marginB-10 style={styles.sectionDiv}>
-          <Text text60>Shares</Text>
-        </View>
+        <SectionTitle title="Shares" />
         <View flex row>
           <ItemGrid
             items={[
@@ -263,9 +201,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
         </View>
       </View>
       <View flex paddingV-10>
-        <View flex row spread paddingB-5 marginB-10 style={styles.sectionDiv}>
-          <Text text60>CPU</Text>
-        </View>
+        <SectionTitle title="CPU" />
         <View flex row>
           <ItemGrid
             items={[
@@ -292,9 +228,7 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
         </View>
       </View>
       <View flex paddingV-10>
-        <View flex row spread paddingB-5 marginB-10 style={styles.sectionDiv}>
-          <Text text60>Memory</Text>
-        </View>
+        <SectionTitle title="Memory" />
         <View flex row>
           <ItemGrid
             items={[
@@ -323,8 +257,13 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
 };
 
 const styles = StyleSheet.create({
-  sectionDiv: {
-    borderBottomWidth: 1,
-    borderColor: Colors.grey30,
+  sectionTitle: {
+    marginTop: 18,
+    marginBottom: 10,
+    fontSize: 12,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    fontWeight: '700',
+    color: Colors.$textNeutral,
   },
 });
