@@ -3,7 +3,7 @@
 set -uo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-NDK_VERSION="${NDK_VERSION:-27.0.12077973}"
+NDK_VERSION="${NDK_VERSION:-27.1.12297006}"
 
 if [ -z "${ANDROID_HOME:-}" ]; then
   # shellcheck source=/dev/null

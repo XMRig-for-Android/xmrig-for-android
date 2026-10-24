@@ -1,8 +1,7 @@
 import React from 'react';
 import { Colors, LoaderScreen } from 'react-native-ui-lib';
-import { SafeAreaView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
+import { initialWindowMetrics, SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { SettingsContext, SettingsContextProvider } from './core/settings';
 import { AppNavigator } from './components';

@@ -5,9 +5,9 @@
 * JDK 23 (JDK 17 or 21 also supported; run `source scripts/setup-java-env.sh`)
 * [React Native Development Enviroment](https://reactnative.dev/docs/environment-setup)
 * Android Studio
-* Android SDK 36
-* Android SDK Build Tools 36.0.0
-* Android NDK 27.0.12077973
+* Android SDK 37 (compile SDK; target SDK remains 36)
+* Android SDK Build Tools 37.0.0
+* Android NDK 27.1.12297006
 * CMake 3.22 or newer
 * `autoconf`, `automake`, and `libtool` (needed when building hwloc from git)
 
@@ -34,7 +34,7 @@ eval "$(scripts/setup-java-env.sh --print)"
 
 ### React Native doctor
 
-Stock `npx react-native doctor` (RN 0.77) does not recognize JDK 23 and uses `sdkmanager` to detect the Android SDK, which often fails on JDK 23. This repo patches the doctor checks and provides a wrapper that sets `ANDROID_HOME` first:
+Stock `npx react-native doctor` (RN 0.88) does not recognize JDK 23 and uses `sdkmanager` to detect the Android SDK, which often fails on JDK 23. This repo patches the doctor checks and provides a wrapper that sets `ANDROID_HOME` first:
 
 ```bash
 yarn doctor
@@ -88,7 +88,7 @@ If Gradle fails on `:react-native-reanimated:configureCMakeDebug` with:
 
 `ld.lld: error: unable to find library -lc++_shared`
 
-the NDK install under `$ANDROID_HOME/ndk/27.0.12077973` is incomplete. Check:
+the NDK install under `$ANDROID_HOME/ndk/27.1.12297006` is incomplete. Check:
 
 ```bash
 bash scripts/verify-ndk.sh
@@ -108,4 +108,4 @@ cd android && ./gradlew clean && cd ..
 npx react-native run-android
 ```
 
-Or use Android Studio → **Settings → Android SDK → SDK Tools** → toggle **NDK (Side by side) 27.0.12077973** off/on.
+Or use Android Studio → **Settings → Android SDK → SDK Tools** → toggle **NDK (Side by side) 27.1.12297006** off/on.

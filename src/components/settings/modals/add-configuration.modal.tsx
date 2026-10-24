@@ -4,6 +4,8 @@ import {
   Text,
   View,
   Colors,
+  Dialog,
+  DialogProps,
   Incubator,
   RadioGroup,
   RadioButton,
@@ -13,7 +15,7 @@ import { SettingsContext } from '../../../core/settings';
 import { ConfigurationMode } from '../../../core/settings/settings.interface';
 import { getConfigurationNameValidator, getConfigurationValidator } from '../../../core/utils/validators';
 
-export type AddConfigurationsModalProps = Incubator.DialogProps & {
+export type AddConfigurationsModalProps = DialogProps & {
     onAdd: (name: string, mode: ConfigurationMode) => void;
 }
 
@@ -42,7 +44,7 @@ const AddConfigurationsModal:React.FC<AddConfigurationsModalProps> = (
 
   return (
     // eslint-disable-next-line react/jsx-props-no-spreading
-    <Incubator.Dialog
+    <Dialog
       onDismiss={onDismiss}
       center
       headerProps={{
@@ -102,7 +104,7 @@ const AddConfigurationsModal:React.FC<AddConfigurationsModalProps> = (
           </View>
         </View>
       </View>
-    </Incubator.Dialog>
+    </Dialog>
   );
 };
 

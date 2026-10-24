@@ -20,10 +20,10 @@ export const EditSimpleAlgorithemsCard: React.FC<EditSimpleCardProps> = (
   React.useEffect(() => {
     const subscription = Dimensions.addEventListener(
       'change',
-      ({ screen: _screen }) => {
+      ({ screen: nextScreen }: { screen: ScaledSize }) => {
         setDimensions({
-          ..._screen,
-          width: _screen.width - 20,
+          ...nextScreen,
+          width: nextScreen.width - 20,
         });
       },
     );

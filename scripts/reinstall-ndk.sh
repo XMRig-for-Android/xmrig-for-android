@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-NDK_VERSION="${NDK_VERSION:-27.0.12077973}"
+NDK_VERSION="${NDK_VERSION:-27.1.12297006}"
 CMDLINE_TOOLS_ZIP="${CMDLINE_TOOLS_ZIP:-commandlinetools-mac-11076708_latest.zip}"
 CMDLINE_TOOLS_URL="https://dl.google.com/android/repository/${CMDLINE_TOOLS_ZIP}"
 

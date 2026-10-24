@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import {
-  Button, Chip, Colors, Incubator, Picker, Typography, View,
+  Button, Chip, Colors, Dialog, DialogProps, Picker, Typography, View,
 } from 'react-native-ui-lib';
 import { IConfiguratioPropertiesPool } from '../../../core/settings/settings.interface';
 import { validateWalletAddress } from '../../../core/utils';
@@ -22,7 +22,7 @@ import {
   XMRPoolEU,
 } from './pools';
 
-export type PoolListModalProps = Incubator.DialogProps & {
+export type PoolListModalProps = DialogProps & {
   onAdd: (pool: IConfiguratioPropertiesPool) => void;
 }
 
@@ -69,7 +69,7 @@ const PoolListModal:React.FC<PoolListModalProps> = (
   };
 
   return (
-    <Incubator.Dialog
+    <Dialog
       onDismiss={onDismiss}
       center
       headerProps={{
@@ -150,7 +150,7 @@ const PoolListModal:React.FC<PoolListModalProps> = (
           </View>
         </View>
       </View>
-    </Incubator.Dialog>
+    </Dialog>
   );
 };
 

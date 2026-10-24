@@ -150,10 +150,10 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
   React.useEffect(() => {
     const subscription = Dimensions.addEventListener(
       'change',
-      ({ screen: _screen }) => {
+      ({ screen: nextScreen }: { screen: ScaledSize }) => {
         setDimensions({
-          ..._screen,
-          width: _screen.width - 19,
+          ...nextScreen,
+          width: nextScreen.width - 19,
         });
       },
     );

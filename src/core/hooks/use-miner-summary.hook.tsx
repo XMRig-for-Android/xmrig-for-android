@@ -85,9 +85,11 @@ export const useMinerSummary = () => {
   const [state, setState] = React.useState<IMinerSummary | null>(null);
 
   React.useEffect(() => {
-    const MinerEmitter = new NativeEventEmitter(XMRigForAndroid);
+    const MinerEmitter = new NativeEventEmitter<{
+      onSummary: [IMinerSummaryEvent];
+    }>(XMRigForAndroid);
 
-    const onSummarySub:EmitterSubscription = MinerEmitter.addListener('onSummary', (event: IMinerSummaryEvent) => {
+    const onSummarySub:EmitterSubscription = MinerEmitter.addListener('onSummary', (event) => {
       try {
         setState(json5.parse(event.data));
       } catch (er) {

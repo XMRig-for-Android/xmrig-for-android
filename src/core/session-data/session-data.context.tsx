@@ -89,9 +89,12 @@ export const SessionDataContextProvider: React.FC<React.PropsWithChildren> = ({ 
   }, [isWorking, minerData?.paused]);
 
   React.useEffect(() => {
-    const MinerEmitter = new NativeEventEmitter(XMRigForAndroid);
+    const MinerEmitter = new NativeEventEmitter<{
+      onLog: [IXMRigLogEvent];
+      onConfigUpdate: [{ config: string }];
+    }>(XMRigForAndroid);
 
-    const onLogSub:EmitterSubscription = MinerEmitter.addListener('onLog', (data:IXMRigLogEvent) => {
+    const onLogSub:EmitterSubscription = MinerEmitter.addListener('onLog', (data) => {
       const cleanData = [...data.log.filter((item) => !filterLogLineRegex.test(item))];
       cleanData.forEach((itemLog) => log(itemLog.replace(cleanAnsiLogLineRegex, '$2').toString()));
     });
