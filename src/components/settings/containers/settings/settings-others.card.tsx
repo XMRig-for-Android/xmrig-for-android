@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Card, Slider, Text, View,
 } from 'react-native-ui-lib';
-import { useDebouncedCallback } from 'use-debounce';
+import { useDebouncedCallback } from '../../../../core/hooks/use-debounced-callback';
 import { SettingsCardProps } from '.';
 import { ISettings } from '../../../../core/settings/settings.interface';
 

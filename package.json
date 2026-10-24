@@ -57,7 +57,6 @@
     "redeyed": "^2.1.1",
     "text-encoding-polyfill": "^0.6.7",
     "uilib-native": "^5.1.2",
-    "use-debounce": "^10.1.1",
     "victory-native": "^43.0.1"
   },
   "devDependencies": {

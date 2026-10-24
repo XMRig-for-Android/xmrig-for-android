@@ -9686,15 +9686,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-debounce@npm:^10.1.1":
-  version: 10.1.1
-  resolution: "use-debounce@npm:10.1.1"
-  peerDependencies:
-    react: "*"
-  checksum: 481ea2e1ff1ac0017bfcf94b1066e9b5b81a2197e5b505c627c5160a4526bbab5893b3d20d04b7b04a5ca9a6fbf538ce193474b5292b6092b8930a9825884293
-  languageName: node
-  linkType: hard
-
 "use-latest-callback@npm:^0.2.4":
   version: 0.2.6
   resolution: "use-latest-callback@npm:0.2.6"
@@ -10053,7 +10044,6 @@ __metadata:
     text-encoding-polyfill: ^0.6.7
     typescript: ^6.0.3
     uilib-native: ^5.1.2
-    use-debounce: ^10.1.1
     victory-native: ^43.0.1
   languageName: unknown
   linkType: soft
