@@ -60,3 +60,31 @@ If you use nvm - open Android Studio from terminal after running `nvm use`.
 
 Run Android Emulator
 `npx react-native run-android`
+
+### Native build errors (`libc++_shared`, react-native-reanimated)
+
+If Gradle fails on `:react-native-reanimated:configureCMakeDebug` with:
+
+`ld.lld: error: unable to find library -lc++_shared`
+
+the NDK install under `$ANDROID_HOME/ndk/27.0.12077973` is incomplete. Check:
+
+```bash
+bash scripts/verify-ndk.sh
+```
+
+Repair (uses JDK 17/21 — Android Studio’s bundled JBR works):
+
+```bash
+bash scripts/reinstall-ndk.sh
+```
+
+Then clean native build caches and rebuild:
+
+```bash
+rm -rf node_modules/react-native-reanimated/android/.cxx
+cd android && ./gradlew clean && cd ..
+npx react-native run-android
+```
+
+Or use Android Studio → **Settings → Android SDK → SDK Tools** → toggle **NDK (Side by side) 27.0.12077973** off/on.
