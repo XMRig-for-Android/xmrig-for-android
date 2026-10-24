@@ -32,7 +32,11 @@ const MinerScreen = () => {
         <MinerControl />
       </View>
       <View flex paddingH-10>
-        <ScrollView nestedScrollEnabled>
+        <ScrollView
+          nestedScrollEnabled
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 16 }}
+        >
           <View flex row spread centerV>
             <Text text60>Miner Statistics</Text>
             <View flex flex-1 right paddingH-10>

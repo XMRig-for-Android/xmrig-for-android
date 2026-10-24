@@ -11,6 +11,7 @@ import {
   Card,
   Assets,
   AnimatedScanner,
+  Text,
 } from 'react-native-ui-lib';
 import { useMiner } from '../../../core/hooks/use-miner.hook';
 import { SessionDataContext } from '../../../core/session-data/session-data.context';
@@ -85,10 +86,41 @@ export const MinerControl:React.FC<ViewProps> = () => {
     return Colors.$outlinePrimary;
   }, [selectedConfiguration, settings, workingState]);
 
+  const startButton = (
+    <Button
+      size={Button.sizes.small}
+      onPress={handleStart}
+      label="Start"
+      iconSource={Assets.icons.start}
+      iconStyle={{
+        width: 8,
+        height: 10,
+        margin: 5,
+        marginRight: 10,
+        tintColor: Colors.$iconDefaultLight,
+      }}
+    />
+  );
+
+  const stopButton = (
+    <Button
+      size={Button.sizes.small}
+      backgroundColor={Colors.$backgroundDangerHeavy}
+      onPress={handleStop}
+      label="Stop"
+      iconSource={Assets.icons.stop}
+      iconStyle={{
+        width: 12,
+        height: 12,
+        margin: 5,
+        marginRight: 10,
+        tintColor: Colors.$iconDefaultLight,
+      }}
+    />
+  );
+
   return (
     <Card
-      row
-      center
       enableShadow
       selected={workingState !== WorkingState.MINING}
       selectionOptions={{
@@ -97,68 +129,45 @@ export const MinerControl:React.FC<ViewProps> = () => {
       }}
       containerStyle={{ overflow: 'hidden' }}
     >
-      {workingState === WorkingState.NOT_WORKING && (
-        <View padding-10 flex>
-          <Picker
-            floatingPlaceholder
-            placeholder={selectedConfiguration ? 'Selected configuration (click to change)' : 'Click here to select configuration'}
-            topBarProps={{ title: 'Configurations' }}
-            value={selectedConfiguration}
-            getLabel={
-              (value) => settings.configurations.find((config) => config.id === value)?.name || 'N/A'
-            }
-            showSearch
-            searchPlaceholder="Search a Configurations"
-            onChange={(value: any) => setSelectedConfiguration(value)}
-            style={{ ...Typography.text60, color: Colors.$textDefault }}
-            floatingPlaceholderStyle={{ ...Typography.text70, color: Colors.$textDefault }}
-          >
-            {_.map(settings.configurations, (item) => (
-              <Picker.Item
-                key={item?.id}
-                value={item?.id || ''}
-                label={item?.name}
-              />
-            ))}
-          </Picker>
+      <View row centerV paddingL-16 paddingR-12 paddingV-14>
+        <View flex marginR-12>
+          {workingState === WorkingState.NOT_WORKING ? (
+            <>
+              <Text text90 $textNeutral marginB-2>Configuration</Text>
+              <Picker
+                placeholder="Select a configuration"
+                topBarProps={{ title: 'Configurations' }}
+                value={selectedConfiguration}
+                getLabel={
+                  (value) => settings.configurations.find((config) => config.id === value)?.name || 'N/A'
+                }
+                showSearch
+                searchPlaceholder="Search configurations"
+                onChange={(value) => {
+                  setSelectedConfiguration(typeof value === 'string' ? value : undefined);
+                }}
+                style={{ ...Typography.text60, color: Colors.$textDefault }}
+              >
+                {_.map(settings.configurations, (item) => (
+                  <Picker.Item
+                    key={item?.id}
+                    value={item?.id || ''}
+                    label={item?.name}
+                  />
+                ))}
+              </Picker>
+            </>
+          ) : (
+            <>
+              <Text text90 $textNeutral marginB-2>Status</Text>
+              <Text text60 $textDefault>{workingState}</Text>
+            </>
+          )}
         </View>
-      )}
-      {!isWorking && (
-        <View absF right bottom padding-10>
-          <Button
-            size={Button.sizes.small}
-            onPress={handleStart}
-            label="Start"
-            iconSource={Assets.icons.start}
-            iconStyle={{
-              width: 8,
-              height: 10,
-              margin: 5,
-              marginRight: 10,
-              tintColor: Colors.$iconDefaultLight,
-            }}
-          />
+        <View>
+          {isWorking ? stopButton : startButton}
         </View>
-      )}
-      {isWorking && (
-        <View padding-10 flex>
-          <Button
-            size={Button.sizes.medium}
-            backgroundColor={Colors.$backgroundDangerHeavy}
-            onPress={handleStop}
-            label="Stop"
-            iconSource={Assets.icons.stop}
-            iconStyle={{
-              width: 15,
-              height: 15,
-              margin: 5,
-              marginRight: 10,
-              tintColor: Colors.$iconDefaultLight,
-            }}
-            text65
-          />
-        </View>
-      )}
+      </View>
       {!selectedConfiguration && (
         <AnimatedScanner
           backgroundColor={Colors.$backgroundWarning}

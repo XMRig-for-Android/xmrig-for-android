@@ -63,7 +63,7 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
   );
 
   const content = (
-    <View flex>
+    <View flex style={styles.content}>
       {pages.map((page, pageIndex) => {
         const shouldMount = !lazyIndexes.includes(pageIndex) || visited.includes(pageIndex);
         if (!shouldMount) {
@@ -74,6 +74,7 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
             key={items[pageIndex].label}
             flex
             style={pageIndex === index ? styles.visiblePage : styles.hiddenPage}
+            pointerEvents={pageIndex === index ? 'auto' : 'none'}
           >
             {page}
           </View>
@@ -104,8 +105,13 @@ const styles = StyleSheet.create({
     width: '40%',
     borderRadius: 2,
   },
+  content: {
+    minHeight: 0,
+    overflow: 'hidden',
+  },
   visiblePage: {
-    display: 'flex',
+    flex: 1,
+    minHeight: 0,
   },
   hiddenPage: {
     display: 'none',
