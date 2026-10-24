@@ -1,19 +1,12 @@
 import React from 'react';
 import { ViewProps } from 'react-native';
-import { LazyLoader } from '../core/lazy-loader';
 import { SegmentedTabs } from '../core/segmented-tabs';
+import MinerScreen from './screens/advanced/miner.screen';
+import LogScreen from './screens/advanced/log.screen';
 
-const MinerScreen = React.lazy(() => import('./screens/advanced/miner.screen'));
-const LogScreen = React.lazy(() => import('./screens/advanced/log.screen'));
-
-const LazyMinerScreen = () => (<LazyLoader><MinerScreen /></LazyLoader>);
-const LazyLogScreen = () => (<LazyLoader><LogScreen /></LazyLoader>);
+const tabs = [{ label: 'Dashboard' }, { label: 'Log' }];
+const pages = [<MinerScreen />, <LogScreen />];
 
 export const TabNavigator:React.FC<ViewProps> = () => (
-  <SegmentedTabs
-    items={[{ label: 'Miner' }, { label: 'Log' }]}
-    pages={[<LazyMinerScreen />, <LazyLogScreen />]}
-    lazyIndexes={[1]}
-    tabBarPosition="bottom"
-  />
+  <SegmentedTabs items={tabs} pages={pages} lazyIndexes={[1]} tabBarPosition="bottom" />
 );

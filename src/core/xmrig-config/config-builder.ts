@@ -3,6 +3,8 @@ import _ from 'lodash';
 import base64 from 'react-native-base64';
 import * as JSON5 from 'json5';
 import {
+  Algorithems,
+  Algorithm,
   Configuration,
   ConfigurationMode,
   IAdvanceConfiguration,
@@ -83,7 +85,8 @@ export default class ConfigBuilder {
       }
       const disabledAlgos = Object.fromEntries(
         Object.entries(asSimpleConfig.properties?.algos || {})
-          .filter(([, enabled]) => enabled === false)
+          .filter(([algo, enabled]) => enabled === false
+            && Algorithems.includes(algo as Algorithm))
           .map(([algo]) => [algo, false]),
       );
       pConfig.setProps({

@@ -25,14 +25,18 @@ const Row: React.FC<React.PropsWithChildren> = ({ children }) => (
   <View style={styles.row}>{children}</View>
 );
 
-const HashrateTile: React.FC<{ title: string; value: number; accent?: boolean }> = ({
+type HashrateTileProps = { title: string; value: number; accent?: boolean };
+
+const HashrateTile = React.memo<HashrateTileProps>(({
   title, value, accent = false,
 }) => {
   const { value: amount, unit } = splitHashrate(hashrateToString(value || 0, true));
   return <MinerCard title={title} value={amount} unit={`${unit}/s`} tone={accent ? 'accent' : 'default'} />;
-};
+});
 
-const SharesCard: React.FC<{ accepted: number; rejected: number; totalHashes: number }> = ({
+type SharesCardProps = { accepted: number; rejected: number; totalHashes: number };
+
+const SharesCard = React.memo<SharesCardProps>(({
   accepted, rejected, totalHashes,
 }) => {
   const total = accepted + rejected;
@@ -67,7 +71,7 @@ const SharesCard: React.FC<{ accepted: number; rejected: number; totalHashes: nu
       </View>
     </View>
   );
-};
+});
 
 type InfoRow = { label: string; value: string | number; icon?: ImageSourcePropType };
 
@@ -124,18 +128,41 @@ export const XMRigView: React.FC<XMRigViewProps> = ({
     </View>
 
     <SectionTitle title="Device" />
-    <InfoList
-      rows={[
-        { label: 'Processor', value: minerData?.cpu.brand || '—', icon: Assets.icons.cpu },
-        { label: 'Architecture', value: minerData?.cpu.arch || '—', icon: Assets.icons.working },
-        { label: 'Cores', value: minerData?.cpu.cores || '—', icon: Assets.icons.cpuCore },
-        { label: 'Threads', value: minerData?.cpu.threads || '—', icon: Assets.icons.cpuCore },
-        { label: 'Free memory', value: minerData ? prettyBytes(minerData.resources.memory.free || 0) : '—', icon: Assets.icons.memory },
-        { label: 'Resident memory', value: minerData ? prettyBytes(minerData.resources.memory.resident_set_memory || 0) : '—', icon: Assets.icons.memory },
-      ]}
+    <DeviceSection
+      brand={minerData?.cpu.brand}
+      arch={minerData?.cpu.arch}
+      cores={minerData?.cpu.cores}
+      threads={minerData?.cpu.threads}
+      freeMemory={minerData ? prettyBytes(minerData.resources.memory.free || 0) : undefined}
+      residentMemory={minerData
+        ? prettyBytes(minerData.resources.memory.resident_set_memory || 0) : undefined}
     />
   </>
 );
+
+type DeviceSectionProps = {
+  brand?: string;
+  arch?: string;
+  cores?: number;
+  threads?: number;
+  freeMemory?: string;
+  residentMemory?: string;
+};
+
+const DeviceSection = React.memo<DeviceSectionProps>(({
+  brand, arch, cores, threads, freeMemory, residentMemory,
+}) => (
+  <InfoList
+    rows={[
+      { label: 'Processor', value: brand || '—', icon: Assets.icons.cpu },
+      { label: 'Architecture', value: arch || '—', icon: Assets.icons.working },
+      { label: 'Cores', value: cores || '—', icon: Assets.icons.cpuCore },
+      { label: 'Threads', value: threads || '—', icon: Assets.icons.cpuCore },
+      { label: 'Free memory', value: freeMemory || '—', icon: Assets.icons.memory },
+      { label: 'Resident memory', value: residentMemory || '—', icon: Assets.icons.memory },
+    ]}
+  />
+));
 
 const styles = StyleSheet.create({
   sectionHeader: {

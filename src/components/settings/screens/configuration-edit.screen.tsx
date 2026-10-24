@@ -2,25 +2,16 @@ import {
   NavigationProp, RouteProp, useNavigation, useRoute,
 } from '@react-navigation/native';
 import isEqual from 'lodash/fp/isEqual';
-import React, { Suspense } from 'react';
-import {
-  ActivityIndicator, Alert, StyleSheet, Text, View,
-} from 'react-native';
+import React from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { Assets } from 'react-native-ui-lib';
 import { RootStackParamList } from '../../../core/navigation';
 import { SettingsActionType, SettingsContext } from '../../../core/settings';
 import { Configuration, ConfigurationMode } from '../../../core/settings/settings.interface';
-import { palette, shadow } from '../../../core/theme';
-import { Button, IconButton } from '../../core/ui';
-
-const ConfigurationEditSimple = React.lazy(() => import('../containers/configurations/edit-simple'));
-const ConfigurationEditAdvance = React.lazy(() => import('../containers/configurations/edit-advance'));
-
-const Loading = () => (
-  <View style={styles.loading}>
-    <ActivityIndicator color={palette.accent} />
-  </View>
-);
+import { palette } from '../../../core/theme';
+import { IconButton, SaveBar } from '../../core/ui';
+import ConfigurationEditSimple from '../containers/configurations/edit-simple';
+import ConfigurationEditAdvance from '../containers/configurations/edit-advance';
 
 const ConfigurationEditScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'Configuration'>>();
@@ -118,33 +109,22 @@ const ConfigurationEditScreen = () => {
   return (
     <View style={styles.screen}>
       <View style={styles.content}>
-        <Suspense fallback={<Loading />}>
-          {configuration?.mode === ConfigurationMode.SIMPLE && (
-            <ConfigurationEditSimple
-              key={revision}
-              configuration={configuration}
-              onUpdate={setConfiguration}
-            />
-          )}
-          {configuration?.mode === ConfigurationMode.ADVANCE && (
-            <ConfigurationEditAdvance
-              key={revision}
-              configuration={configuration}
-              onUpdate={setConfiguration}
-            />
-          )}
-        </Suspense>
+        {configuration?.mode === ConfigurationMode.SIMPLE && (
+          <ConfigurationEditSimple
+            key={revision}
+            configuration={configuration}
+            onUpdate={setConfiguration}
+          />
+        )}
+        {configuration?.mode === ConfigurationMode.ADVANCE && (
+          <ConfigurationEditAdvance
+            key={revision}
+            configuration={configuration}
+            onUpdate={setConfiguration}
+          />
+        )}
       </View>
-      <View style={styles.bar}>
-        <View style={styles.barStatus}>
-          <View style={[styles.dot, { backgroundColor: isDirty ? palette.warning : palette.success }]} />
-          <Text style={styles.barText}>{isDirty ? 'Unsaved changes' : 'All changes saved'}</Text>
-        </View>
-        {isDirty ? (
-          <Button label="Discard" variant="ghost" size="sm" onPress={handleDiscard} />
-        ) : null}
-        <Button label="Save" size="sm" disabled={!isDirty} onPress={handleSave} style={styles.save} />
-      </View>
+      <SaveBar dirty={isDirty} onSave={handleSave} onDiscard={handleDiscard} />
     </View>
   );
 };
@@ -156,42 +136,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  loading: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: palette.surface,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.track,
-    ...shadow(2),
-  },
-  barStatus: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  barText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: palette.inkMuted,
-  },
-  save: {
-    minWidth: 96,
   },
 });
 

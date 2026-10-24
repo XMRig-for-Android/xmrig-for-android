@@ -1,6 +1,7 @@
 export {
   LoggerContextProvider,
   LoggerContext,
+  LoggerActionsContext,
 } from './logger.context';
 
 export {

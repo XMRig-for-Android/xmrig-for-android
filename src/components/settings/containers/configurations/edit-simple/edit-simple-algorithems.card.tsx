@@ -1,18 +1,25 @@
-import { merge } from 'lodash/fp';
+import { isEqual, merge } from 'lodash/fp';
 import React from 'react';
 import {
   Pressable, StyleSheet, Text, View,
 } from 'react-native';
-import { Algorithems, Algorithm } from '../../../../../core/settings/settings.interface';
+import {
+  Algorithems, Algorithm, MoneroOceanOnlyAlgorithms, XMRigFork,
+} from '../../../../../core/settings/settings.interface';
 import { EditSimpleCardProps } from './index';
 import { palette } from '../../../../../core/theme';
 import { Button, Section } from '../../../../core/ui';
 
-const sortedAlgorithms = [...Algorithems].sort();
+const allAlgorithms = [...Algorithems].sort();
+const originalAlgorithms = allAlgorithms.filter(
+  (item) => !MoneroOceanOnlyAlgorithms.includes(item),
+);
 
-export const EditSimpleAlgorithemsCard: React.FC<EditSimpleCardProps> = (
+const EditSimpleAlgorithemsCardBase: React.FC<EditSimpleCardProps> = (
   { setLocalState, localState },
 ) => {
+  const sortedAlgorithms = localState.xmrig_fork === XMRigFork.MONEROOCEAN
+    ? allAlgorithms : originalAlgorithms;
   const algos = localState.properties?.algos;
   const isEnabled = (item: Algorithm) => (algos ? algos[item] !== false : true);
   const enabledCount = sortedAlgorithms.filter(isEnabled).length;
@@ -58,6 +65,12 @@ export const EditSimpleAlgorithemsCard: React.FC<EditSimpleCardProps> = (
     </Section>
   );
 };
+
+export const EditSimpleAlgorithemsCard = React.memo(
+  EditSimpleAlgorithemsCardBase,
+  (prev, next) => isEqual(prev.localState.properties?.algos, next.localState.properties?.algos)
+    && prev.localState.xmrig_fork === next.localState.xmrig_fork,
+);
 
 const styles = StyleSheet.create({
   chips: {

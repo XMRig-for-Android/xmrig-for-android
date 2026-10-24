@@ -4,27 +4,20 @@ import { ViewProps } from 'react-native-ui-lib';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SegmentedTabs } from './segmented-tabs';
 import { RootStackParamList } from '../../core/navigation';
-import { LazyLoader } from './lazy-loader';
 import ConfigurationEditScreen from '../settings/screens/configuration-edit.screen';
+import ConfigurationsScreen from '../settings/screens/configurations.screen';
+import SettingsScreen from '../settings/screens/settings.screen';
+import MinerView from '../miner/miner-view';
 import { version } from '../../version';
 import { palette, radius } from '../../core/theme';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const Miner = React.lazy(() => import('../miner/miner-view'));
-const Profiles = React.lazy(() => import('../settings/screens/configurations.screen'));
-const Settings = React.lazy(() => import('../settings/screens/settings.screen'));
-
-const LazyMiner = () => (<LazyLoader><Miner /></LazyLoader>);
-const LazyProfiles = () => (<LazyLoader><Profiles /></LazyLoader>);
-const LazySettings = () => (<LazyLoader><Settings /></LazyLoader>);
+const tabs = [{ label: 'Miner' }, { label: 'Profiles' }, { label: 'Settings' }];
+const pages = [<MinerView />, <ConfigurationsScreen />, <SettingsScreen />];
 
 const AppTabs:React.FC<ViewProps> = () => (
-  <SegmentedTabs
-    items={[{ label: 'Miner' }, { label: 'Profiles' }, { label: 'Settings' }]}
-    pages={[<LazyMiner />, <LazyProfiles />, <LazySettings />]}
-    lazyIndexes={[1, 2]}
-  />
+  <SegmentedTabs items={tabs} pages={pages} lazyIndexes={[1, 2]} />
 );
 
 export const AppNavigator:React.FC<ViewProps> = () => (

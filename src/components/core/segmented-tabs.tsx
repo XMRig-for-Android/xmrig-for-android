@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Activity } from 'react';
 import {
   Pressable,
   StyleProp,
@@ -31,6 +31,9 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
   const [visited, setVisited] = React.useState<number[]>([0]);
 
   const select = (next: number) => {
+    if (next === index) {
+      return;
+    }
     setIndex(next);
     setVisited((current) => (current.includes(next) ? current : [...current, next]));
   };
@@ -76,15 +79,13 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
         if (!shouldMount) {
           return null;
         }
+        const visible = pageIndex === index;
         return (
-          <View
-            key={items[pageIndex].label}
-            flex
-            style={pageIndex === index ? styles.visiblePage : styles.hiddenPage}
-            pointerEvents={pageIndex === index ? 'auto' : 'none'}
-          >
-            {page}
-          </View>
+          <Activity key={items[pageIndex].label} mode={visible ? 'visible' : 'hidden'}>
+            <View flex style={styles.visiblePage}>
+              {page}
+            </View>
+          </Activity>
         );
       })}
     </View>
@@ -162,8 +163,5 @@ const styles = StyleSheet.create({
   visiblePage: {
     flex: 1,
     minHeight: 0,
-  },
-  hiddenPage: {
-    display: 'none',
   },
 });

@@ -268,6 +268,32 @@ export const textFieldStyles = {
   placeholderTextColor: palette.inkSubtle,
 };
 
+type SaveBarProps = {
+  dirty: boolean;
+  onSave: () => void;
+  onDiscard: () => void;
+  saveDisabled?: boolean;
+};
+
+export const SaveBar: React.FC<SaveBarProps> = ({
+  dirty, onSave, onDiscard, saveDisabled = false,
+}) => (
+  <View style={styles.saveBar}>
+    <View style={styles.saveBarStatus}>
+      <View style={[styles.saveBarDot, { backgroundColor: dirty ? palette.warning : palette.success }]} />
+      <Text style={styles.saveBarText}>{dirty ? 'Unsaved changes' : 'All changes saved'}</Text>
+    </View>
+    {dirty ? <Button label="Discard" variant="ghost" size="sm" onPress={onDiscard} /> : null}
+    <Button
+      label="Save"
+      size="sm"
+      disabled={!dirty || saveDisabled}
+      onPress={onSave}
+      style={styles.saveBarButton}
+    />
+  </View>
+);
+
 type SliderRowProps = {
   label: string;
   description?: string;
@@ -311,7 +337,7 @@ export const SliderRow: React.FC<SliderRowProps> = ({
         onValueChange={(next: number) => {
           setCurrent(next);
           clearTimeout(timer.current);
-          timer.current = setTimeout(() => onCommit(next), 400);
+          timer.current = setTimeout(() => onCommit(next), 150);
         }}
       />
     </View>
@@ -471,6 +497,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     color: palette.inkSubtle,
+  },
+  saveBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: palette.surface,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.track,
+    ...shadow(2),
+  },
+  saveBarStatus: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  saveBarDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  saveBarText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: palette.inkMuted,
+  },
+  saveBarButton: {
+    minWidth: 96,
   },
   sliderRow: {
     paddingVertical: 12,

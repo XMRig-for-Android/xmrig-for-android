@@ -8,7 +8,7 @@ import {
 import { SettingsActionType, SettingsContext } from '../settings';
 import { cleanAnsiLogLineRegex, filterLogLineRegex } from '../utils/parsers';
 import { Configuration, ConfigurationMode, ISimpleConfiguration } from '../settings/settings.interface';
-import { LoggerContext } from '../logger';
+import { LoggerActionsContext } from '../logger';
 import { PowerContext } from '../power/power.context';
 import { IMinerSummary, useMinerSummary } from '../hooks/use-miner-summary.hook';
 import { useMinerStatus } from '../hooks/use-miner-status.hook';
@@ -37,7 +37,7 @@ export const SessionDataContextProvider: React.FC<React.PropsWithChildren> = ({ 
   const { settings, settingsDispatcher } = React.useContext(SettingsContext);
   const settingsRef = React.useRef(settings);
   settingsRef.current = settings;
-  const { log } = React.useContext(LoggerContext);
+  const { logMany } = React.useContext(LoggerActionsContext);
   const { isLowBattery, isPowerConnected } = React.useContext(PowerContext);
 
   const hashrateHistory = useHashrateHistory([0, 0]);
@@ -95,8 +95,9 @@ export const SessionDataContextProvider: React.FC<React.PropsWithChildren> = ({ 
     }>(XMRigForAndroid);
 
     const onLogSub:EmitterSubscription = MinerEmitter.addListener('onLog', (data) => {
-      const cleanData = [...data.log.filter((item) => !filterLogLineRegex.test(item))];
-      cleanData.forEach((itemLog) => log(itemLog.replace(cleanAnsiLogLineRegex, '$2').toString()));
+      logMany(data.log
+        .filter((item) => !filterLogLineRegex.test(item))
+        .map((item) => item.replace(cleanAnsiLogLineRegex, '$2').toString()));
     });
 
     const onConfigUpdateSub:EmitterSubscription = MinerEmitter.addListener('onConfigUpdate', (data) => {
@@ -217,26 +218,34 @@ export const SessionDataContextProvider: React.FC<React.PropsWithChildren> = ({ 
     }
   }, [cpuTemperature, settings.thermal, workingState]);
 
+  const hashrateTotals = React.useMemo<IHashrateHistory>(() => ({
+    historyCurrent: hashrateHistory.history,
+    history10s: hashrateHistory10s.history,
+    history60s: hashrateHistory60s.history,
+    history15m: hashrateHistory15m.history,
+    historyMax: hashrateHistoryMax.history,
+  }), [
+    hashrateHistory.history,
+    hashrateHistory10s.history,
+    hashrateHistory60s.history,
+    hashrateHistory15m.history,
+    hashrateHistoryMax.history,
+  ]);
+
+  const value = React.useMemo<SessionDataContextType>(() => ({
+    working,
+    workingState,
+    minerData,
+    hashrateTotals,
+    minerActions: {
+      pause: pauseMiner,
+      resume: resumeMiner,
+    },
+    CPUTemp: cpuTemperature,
+  }), [working, workingState, minerData, hashrateTotals, cpuTemperature]);
+
   return (
-    // eslint-disable-next-line react/jsx-no-constructed-context-values
-    <SessionDataContext.Provider value={{
-      working,
-      workingState,
-      minerData,
-      hashrateTotals: {
-        historyCurrent: hashrateHistory.history,
-        history10s: hashrateHistory10s.history,
-        history60s: hashrateHistory60s.history,
-        history15m: hashrateHistory15m.history,
-        historyMax: hashrateHistoryMax.history,
-      },
-      minerActions: {
-        pause: pauseMiner,
-        resume: resumeMiner,
-      },
-      CPUTemp: cpuTemperature,
-    }}
-    >
+    <SessionDataContext.Provider value={value}>
       {children}
     </SessionDataContext.Provider>
   );

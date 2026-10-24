@@ -63,11 +63,9 @@ export const defaultSimpleConfiguration: Partial<ISimpleConfiguration> = {
     algos: {
       ...defaultAlgorithems,
       'cn/gpu': false,
-      'cn-heavy': false,
       'cn-heavy/0': false,
       'cn-heavy/tube': false,
       'cn-heavy/xhv': false,
-      astrobwt: false,
       panthera: false,
     },
     algo_perf: {},

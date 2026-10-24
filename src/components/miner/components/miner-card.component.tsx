@@ -20,7 +20,7 @@ const toneColors = {
   danger: { fg: palette.danger, iconBg: palette.dangerSoft, iconTint: palette.danger },
 };
 
-export const MinerCard: React.FC<MinerCardProps> = ({
+const MinerCardBase: React.FC<MinerCardProps> = ({
   style,
   children,
   title = '',
@@ -53,6 +53,8 @@ export const MinerCard: React.FC<MinerCardProps> = ({
     </View>
   );
 };
+
+export const MinerCard = React.memo(MinerCardBase);
 
 const styles = StyleSheet.create({
   card: {

@@ -31,7 +31,9 @@ const statusMeta: Record<string, { label: string; color: string }> = {
   [WorkingState.PAUSED]: { label: 'Paused', color: palette.warning },
 };
 
-const HeroChart: React.FC<{ data: number[] }> = ({ data }) => {
+type HeroChartProps = { data: number[] };
+
+const HeroChart = React.memo(({ data }: HeroChartProps) => {
   const points = [0, ..._.takeRight(data, 12), 0].map((y, x) => ({ x, y }));
   return (
     <View style={styles.chart}>
@@ -58,7 +60,7 @@ const HeroChart: React.FC<{ data: number[] }> = ({ data }) => {
       </CartesianChart>
     </View>
   );
-};
+});
 
 export const MinerControl:React.FC<ViewProps> = () => {
   const toaster = useToaster();
