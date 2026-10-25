@@ -29,7 +29,7 @@ export const Nano:React.FC<IPool> = ({ onChange }) => {
         label="Wallet Address"
         value={wallet}
         onChangeText={setWallet}
-        validate={['required', (value: string) => validateWalletAddress(value)]}
+        validate={['required', (value?: string) => validateWalletAddress(value)]}
         validationMessage={['Required', 'Wallet validation failed']}
         validateOnChange
         enableErrors

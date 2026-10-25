@@ -1,41 +1,28 @@
-all: toolchain libuv hwloc openssl xmrig xmrig-mo install
+.PHONY: all toolchain libuv hwloc openssl xmrig xmrig-mo install clean
+
+all:
+	./build.sh all
 
 toolchain:
-	script/toolchain-build.sh
+	./build.sh toolchain
 
-libuv: toolchain libuv_dl 
-	script/libuv-build.sh
+libuv:
+	./build.sh libuv
 
-libuv_dl:
-	script/libuv-fetch.sh
+hwloc:
+	./build.sh hwloc
 
-openssl: toolchain openssl_dl
-	script/openssl-build.sh
+openssl:
+	./build.sh openssl
 
-openssl_dl:
-	script/openssl-fetch.sh
+xmrig: libuv hwloc openssl
+	./build.sh xmrig
 
-xmrig: toolchain xmrig_dl
-	script/xmrig-build.sh
+xmrig-mo: libuv hwloc openssl
+	./build.sh xmrig-mo
 
-xmrig_dl:
-	script/xmrig-fetch.sh
-
-xmrig-mo: toolchain xmrig-mo_dl
-	script/xmrig-mo-build.sh
-
-xmrig-mo_dl:
-	script/xmrig-mo-fetch.sh
-
-hwloc: toolchain hwloc_dl
-	script/hwloc-build.sh
-
-hwloc_dl:
-	script/hwloc-fetch.sh
-
-install:
-	script/install.sh
+install: xmrig xmrig-mo
+	./build.sh install
 
 clean:
-	script/clean.sh
-
+	./build.sh clean

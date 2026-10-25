@@ -153,3 +153,4 @@ xmrig/lib-builder/build
 *.hprof
 android/local.properties
 private/*
+.yarn

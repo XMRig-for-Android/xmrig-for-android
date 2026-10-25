@@ -8,7 +8,7 @@ import {
 import { SettingsActionType, SettingsContext } from '../settings';
 import { cleanAnsiLogLineRegex, filterLogLineRegex } from '../utils/parsers';
 import { Configuration, ConfigurationMode, ISimpleConfiguration } from '../settings/settings.interface';
-import { LoggerContext } from '../logger';
+import { LoggerActionsContext } from '../logger';
 import { PowerContext } from '../power/power.context';
 import { IMinerSummary, useMinerSummary } from '../hooks/use-miner-summary.hook';
 import { useMinerStatus } from '../hooks/use-miner-status.hook';
@@ -23,8 +23,8 @@ type SessionDataContextType = {
   minerData: IMinerSummary | null,
   hashrateTotals: IHashrateHistory,
   minerActions: {
-    pause: () => {},
-    resume: () => {},
+    pause: () => void,
+    resume: () => void,
   },
   CPUTemp: number,
 }
@@ -32,10 +32,12 @@ type SessionDataContextType = {
 // @ts-ignore
 export const SessionDataContext:React.Context<SessionDataContextType> = React.createContext();
 
-export const SessionDataContextProvider:React.FC = ({ children }) => {
+export const SessionDataContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const toaster = useToaster();
   const { settings, settingsDispatcher } = React.useContext(SettingsContext);
-  const { log } = React.useContext(LoggerContext);
+  const settingsRef = React.useRef(settings);
+  settingsRef.current = settings;
+  const { logMany } = React.useContext(LoggerActionsContext);
   const { isLowBattery, isPowerConnected } = React.useContext(PowerContext);
 
   const hashrateHistory = useHashrateHistory([0, 0]);
@@ -87,17 +89,22 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
   }, [isWorking, minerData?.paused]);
 
   React.useEffect(() => {
-    const MinerEmitter = new NativeEventEmitter(XMRigForAndroid);
+    const MinerEmitter = new NativeEventEmitter<{
+      onLog: [IXMRigLogEvent];
+      onConfigUpdate: [{ config: string }];
+    }>(XMRigForAndroid);
 
-    const onLogSub:EmitterSubscription = MinerEmitter.addListener('onLog', (data:IXMRigLogEvent) => {
-      const cleanData = [...data.log.filter((item) => !filterLogLineRegex.test(item))];
-      cleanData.forEach((itemLog) => log(itemLog.replace(cleanAnsiLogLineRegex, '$2').toString()));
+    const onLogSub:EmitterSubscription = MinerEmitter.addListener('onLog', (data) => {
+      logMany(data.log
+        .filter((item) => !filterLogLineRegex.test(item))
+        .map((item) => item.replace(cleanAnsiLogLineRegex, '$2').toString()));
     });
 
     const onConfigUpdateSub:EmitterSubscription = MinerEmitter.addListener('onConfigUpdate', (data) => {
       console.log('onConfigUpdate', data.config);
-      const cConfig:Configuration | undefined = settings.configurations.find(
-        (config) => config.id === settings.selectedConfiguration,
+      const currentSettings = settingsRef.current;
+      const cConfig:Configuration | undefined = currentSettings.configurations.find(
+        (config) => config.id === currentSettings.selectedConfiguration,
       );
       if (cConfig && cConfig.mode === ConfigurationMode.SIMPLE) {
         try {
@@ -131,38 +138,53 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
     return () => {
       onLogSub.remove();
       onConfigUpdateSub.remove();
-      XMRigForAndroid.stop();
     };
   }, []);
 
+  const wasLowBattery = React.useRef(false);
   React.useEffect(() => {
-    if (isLowBattery) {
+    if (isLowBattery && !wasLowBattery.current) {
       toaster({
         message: 'Battery is low',
         position: 'top',
         preset: Incubator.ToastPresets.FAILURE,
       });
     }
-    if (settings.power.pauseOnLowBattery && isLowBattery === true) {
+    wasLowBattery.current = isLowBattery;
+    if (
+      settings.power.pauseOnLowBattery
+      && isLowBattery === true
+      && workingState === WorkingState.MINING
+    ) {
       pauseMiner();
-    } else if (settings.power.resumeOnBatteryOk && isLowBattery === false) {
+    } else if (
+      settings.power.resumeOnBatteryOk
+      && isLowBattery === false
+      && workingState === WorkingState.PAUSED
+    ) {
       resumeMiner();
     }
-  }, [isLowBattery]);
+  }, [isLowBattery, settings.power, workingState]);
 
+  const previousPowerConnected = React.useRef<boolean | null>(null);
   React.useEffect(() => {
-    if (!isPowerConnected) {
-      toaster({
-        message: 'Charger is disconnected',
-        position: 'top',
-        preset: Incubator.ToastPresets.FAILURE,
-      });
-    } else {
-      toaster({
-        message: 'Charger is connected',
-        position: 'top',
-        preset: Incubator.ToastPresets.SUCCESS,
-      });
+    if (previousPowerConnected.current === null) {
+      previousPowerConnected.current = isPowerConnected;
+    } else if (previousPowerConnected.current !== isPowerConnected) {
+      previousPowerConnected.current = isPowerConnected;
+      if (!isPowerConnected) {
+        toaster({
+          message: 'Charger is disconnected',
+          position: 'top',
+          preset: Incubator.ToastPresets.FAILURE,
+        });
+      } else {
+        toaster({
+          message: 'Charger is connected',
+          position: 'top',
+          preset: Incubator.ToastPresets.SUCCESS,
+        });
+      }
     }
     if (
       settings.power.resumeOnChargerConnected
@@ -176,7 +198,7 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
     ) {
       pauseMiner();
     }
-  }, [isPowerConnected]);
+  }, [isPowerConnected, settings.power, workingState]);
 
   React.useEffect(() => {
     if (!Number.isNaN(cpuTemperature)) {
@@ -194,28 +216,36 @@ export const SessionDataContextProvider:React.FC = ({ children }) => {
         resumeMiner();
       }
     }
-  }, [cpuTemperature]);
+  }, [cpuTemperature, settings.thermal, workingState]);
+
+  const hashrateTotals = React.useMemo<IHashrateHistory>(() => ({
+    historyCurrent: hashrateHistory.history,
+    history10s: hashrateHistory10s.history,
+    history60s: hashrateHistory60s.history,
+    history15m: hashrateHistory15m.history,
+    historyMax: hashrateHistoryMax.history,
+  }), [
+    hashrateHistory.history,
+    hashrateHistory10s.history,
+    hashrateHistory60s.history,
+    hashrateHistory15m.history,
+    hashrateHistoryMax.history,
+  ]);
+
+  const value = React.useMemo<SessionDataContextType>(() => ({
+    working,
+    workingState,
+    minerData,
+    hashrateTotals,
+    minerActions: {
+      pause: pauseMiner,
+      resume: resumeMiner,
+    },
+    CPUTemp: cpuTemperature,
+  }), [working, workingState, minerData, hashrateTotals, cpuTemperature]);
 
   return (
-    // eslint-disable-next-line react/jsx-no-constructed-context-values
-    <SessionDataContext.Provider value={{
-      working,
-      workingState,
-      minerData,
-      hashrateTotals: {
-        historyCurrent: hashrateHistory.history,
-        history10s: hashrateHistory10s.history,
-        history60s: hashrateHistory60s.history,
-        history15m: hashrateHistory15m.history,
-        historyMax: hashrateHistoryMax.history,
-      },
-      minerActions: {
-        pause: pauseMiner,
-        resume: resumeMiner,
-      },
-      CPUTemp: cpuTemperature,
-    }}
-    >
+    <SessionDataContext.Provider value={value}>
       {children}
     </SessionDataContext.Provider>
   );

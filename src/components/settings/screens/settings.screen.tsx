@@ -1,160 +1,68 @@
-import { merge } from 'lodash/fp';
+import isEqual from 'lodash/fp/isEqual';
 import React from 'react';
-import { ScrollView } from 'react-native';
-import {
-  Assets, Button, ButtonProps, Colors, FloatingButton, Text, View,
-} from 'react-native-ui-lib';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { ISettings, SettingsActionType, SettingsContext } from '../../../core/settings';
 import { IPowerSettings, IThermalSettings } from '../../../core/settings/settings.interface';
+import { palette } from '../../../core/theme';
+import { SaveBar, ScreenHeader } from '../../core/ui';
+import SettingsPowerCard from '../containers/settings/settings-power.card';
+import SettingsThermalCard from '../containers/settings/settings-thermal.card';
+import SettingsOthersCard from '../containers/settings/settings-others.card';
 
-const SettingsPowerCard = React.lazy(() => import('../containers/settings/settings-power.card'));
-const SettingsThermalCard = React.lazy(() => import('../containers/settings/settings-thermal.card'));
-const SettingsOthersCard = React.lazy(() => import('../containers/settings/settings-others.card'));
+type SettingsDraft = Pick<ISettings, 'power' | 'thermal' | 'donation' | 'printTime'>;
 
-const actionsButtonDefault: ButtonProps = {
-  label: 'Menu',
-  iconSource: Assets.icons.barsOpen,
-  iconStyle: {
-    width: 22,
-    height: 22,
-    margin: 0,
-    tintColor: Colors.$iconDefaultLight,
-  },
-};
+const toDraft = (settings: ISettings): SettingsDraft => ({
+  power: settings.power,
+  thermal: settings.thermal,
+  donation: settings.donation,
+  printTime: settings.printTime,
+});
 
 const SettingsScreen: React.FC = () => {
   const { settings, settingsDispatcher } = React.useContext(SettingsContext);
+  const saved = React.useMemo(
+    () => toDraft(settings),
+    [settings.power, settings.thermal, settings.donation, settings.printTime],
+  );
+  const [draft, setDraft] = React.useState<SettingsDraft>(saved);
+  const dirty = !isEqual(draft, saved);
 
-  const [localSettings, setLocalSettings] = React.useState<ISettings>({ ...settings });
-  React.useEffect(() => setLocalSettings({ ...settings }), []);
-
-  const [changesCount, setChangesCount] = React.useState<number>(0);
-
-  React.useEffect(() => {
-    if (localSettings !== settings) {
-      setChangesCount((val) => val + 1);
-    } else {
-      setChangesCount(0);
-    }
-  }, [localSettings]);
-
-  const handleUpdate = (data: Partial<ISettings>) => {
-    settingsDispatcher({
-      type: SettingsActionType.UPDATE,
-      value: data,
-    });
-  };
-
-  const handleLocalUpdate = (data: Partial<ISettings>) => {
-    setLocalSettings((prevState) => merge(prevState, data));
-  };
-
-  const handlePowerUpdate = (data: Partial<IPowerSettings>) => {
-    handleLocalUpdate({
-      power: merge(localSettings?.power, data),
-    });
-  };
-
-  const handleThermalUpdate = (data: Partial<IThermalSettings>) => {
-    handleLocalUpdate({
-      thermal: merge(localSettings?.thermal, data),
-    });
-  };
-
-  const [actionsVisible, setActionVisible] = React.useState<boolean>(false);
-  const [actionsButtonProps, setActionButtonProps] = React.useState<ButtonProps>({
-    ...actionsButtonDefault,
-  });
-  React.useEffect(() => {
-    if (actionsVisible) {
-      setActionButtonProps({
-        ...actionsButtonDefault,
-        backgroundColor: Colors.$backgroundPrimaryHeavy,
-      });
-    } else {
-      setActionButtonProps({
-        iconSource: Assets.icons.barsClose,
-        iconStyle: {
-          width: 15,
-          height: 15,
-          margin: 8,
-          tintColor: Colors.$iconDefaultLight,
-        },
-        backgroundColor: Colors.$backgroundPrimaryHeavy,
-      });
-    }
-  }, [actionsVisible]);
+  const updatePower = React.useCallback((power: Partial<IPowerSettings>) => setDraft(
+    (current) => ({ ...current, power: { ...current.power, ...power } }),
+  ), []);
+  const updateThermal = React.useCallback((thermal: Partial<IThermalSettings>) => setDraft(
+    (current) => ({ ...current, thermal: { ...current.thermal, ...thermal } }),
+  ), []);
+  const updateOther = React.useCallback((value: Partial<ISettings>) => setDraft(
+    (current) => ({ ...current, ...value }),
+  ), []);
 
   return (
-    <View bg-screenBG flex>
-      <View
-        row
-        spread
-        paddingV-10
-        paddingH-10
-        centerV
-      >
-        <View row centerV>
-          <Text text60>Settings</Text>
-        </View>
-        <Button
-          size={Button.sizes.small}
-          onPress={() => setActionVisible(!actionsVisible)}
-          animateLayout
-          // eslint-disable-next-line react/jsx-props-no-spreading
-          {...actionsButtonProps}
-        />
-      </View>
-      {changesCount > 0 && (
-        <View paddingV-10 paddingT-0 center>
-          <Text text90 $textDanger>
-            Please save changes (
-            {changesCount}
-            ) using the Menu button
-          </Text>
-        </View>
-      )}
-      <View
-        flex
-        paddingH-10
-        paddingB-10
-        useSafeArea
-        style={{ zIndex: 0 }}
-      >
-        <ScrollView>
-          <SettingsPowerCard settings={localSettings?.power} onUpdate={handlePowerUpdate} />
-          <View height={10} />
-          <SettingsThermalCard settings={localSettings?.thermal} onUpdate={handleThermalUpdate} />
-          <View height={10} />
-          <SettingsOthersCard settings={localSettings} onUpdate={handleLocalUpdate} />
-        </ScrollView>
-      </View>
-      <FloatingButton
-        duration={500}
-        visible={actionsVisible}
-        button={{
-          size: Button.sizes.large,
-          disabled: changesCount === 0,
-          onPress: () => {
-            if (localSettings) {
-              handleUpdate(localSettings);
-              setChangesCount(0);
-            }
-            setActionVisible(false);
-          },
-          backgroundColor: Colors.$backgroundPrimaryHeavy,
-          label: `Save ${changesCount} Changes`,
-          iconSource: Assets.icons.save,
-          iconStyle: {
-            display: 'flex',
-            width: 16,
-            height: 20,
-            tintColor: Colors.$iconDefaultLight,
-          },
-        }}
+    <View style={styles.screen}>
+      <ScreenHeader title="Settings" subtitle="Power, thermal and miner behaviour" />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <SettingsPowerCard settings={draft.power} onUpdate={updatePower} />
+        <SettingsThermalCard settings={draft.thermal} onUpdate={updateThermal} />
+        <SettingsOthersCard settings={draft as ISettings} onUpdate={updateOther} />
+      </ScrollView>
+      <SaveBar
+        dirty={dirty}
+        onDiscard={() => setDraft(saved)}
+        onSave={() => settingsDispatcher({ type: SettingsActionType.UPDATE, value: draft })}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: palette.background,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+});
 
 export default SettingsScreen;

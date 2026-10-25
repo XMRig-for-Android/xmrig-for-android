@@ -5,7 +5,7 @@ import { ConfigurationMode, RandomXMode } from '../settings/settings.interface';
 export const hostnameValidator = Joi.string().min(3).max(30).required();
 export const usernameValidator = Joi.optional();
 export const passwordValidator = Joi.optional();
-export const portValidator = Joi.number().integer().min(10).max(65550)
+export const portValidator = Joi.number().integer().min(1).max(65535)
   .required();
 
 export const poolValidator = Joi.object({
@@ -16,10 +16,12 @@ export const poolValidator = Joi.object({
   sslEnabled: Joi.boolean(),
 });
 
-export const validateWalletAddress = (addr?:string):boolean => addr != null && /[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}/.test(addr);
+export const validateWalletAddress = (addr?: string): boolean => addr != null
+  && /^[48][0-9AB][1-9A-HJ-NP-Za-km-z]{93}([1-9A-HJ-NP-Za-km-z]{11})?$/.test(addr);
 
 export const yieldValidator = Joi.boolean().required();
-export const priorityValidator = Joi.number().min(1).max(5).optional();
+export const priorityValidator = Joi.number().min(1).max(5).allow(null)
+  .optional();
 export const maxThreadsHintValidator = Joi.number().min(1).max(100).required();
 export const randomXModedValidator = Joi
   .string()

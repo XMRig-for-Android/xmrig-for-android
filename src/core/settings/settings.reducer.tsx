@@ -45,7 +45,7 @@ export const SettingsReducer:Reducer<ISettings, ISettingsReducerAction> = (
           ...prevState.configurations,
           {
             ...newConfig,
-            id: uuid.v4(),
+            id: newConfig.id || uuid.v4(),
           },
         ],
       } as ISettings;
@@ -59,11 +59,20 @@ export const SettingsReducer:Reducer<ISettings, ISettingsReducerAction> = (
           return config;
         }),
       } as ISettings;
-    case SettingsActionType.DELETE_CONFIGURATIONS:
+    case SettingsActionType.DELETE_CONFIGURATIONS: {
+      const deletedIds = action.value as string[];
+      const configurations = prevState.configurations.filter(
+        (config) => !deletedIds.includes(`${config.id}`),
+      );
+      const selectedConfiguration = deletedIds.includes(`${prevState.selectedConfiguration}`)
+        ? undefined
+        : prevState.selectedConfiguration;
       return {
         ...prevState,
-        configurations: prevState.configurations.filter((config) => !(action.value as string[]).includes(`${config.id}`)),
+        configurations,
+        selectedConfiguration,
       } as ISettings;
+    }
     case SettingsActionType.SET_SELECTED_CONFIGURAION:
       return {
         ...prevState,

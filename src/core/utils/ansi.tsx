@@ -51,7 +51,7 @@ export const useStyledCode = (code: string, isDark: boolean = false) => {
       });
       return parsed.code;
     // eslint-disable-next-line no-empty
-    } catch (er) {}
+    } catch {}
     return code;
   }, [cleanCode, isDark]);
 

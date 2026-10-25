@@ -9,4 +9,5 @@ export interface ILoggerLine {
 export interface ILoggerReducerAction {
     type: LoggerActionType;
     value?: Partial<ILoggerLine>;
+    messages?: string[];
 }

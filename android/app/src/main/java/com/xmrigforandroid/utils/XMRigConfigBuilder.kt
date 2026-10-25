@@ -4,25 +4,13 @@ import android.content.Context
 import android.util.Base64
 import android.util.Log
 import com.xmrigforandroid.data.serialization.Configuration
-import com.xmrigforandroid.data.serialization.ConfigurationMode
-import com.xmrigforandroid.data.serialization.SimpleConfigurationPropertiesCPU
-import com.xmrigforandroid.data.serialization.SimpleConfigurationPropertiesPool
-import java.io.*
-import java.lang.RuntimeException
-import java.lang.StringBuilder
 import java.io.File
-import java.nio.charset.Charset
-
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 class XMRigConfigBuilder(val context: Context) {
 
-    var config: String
-    var mContext: Context
-
-    init {
-        this.mContext = context
-        config = loadConfigTemplate()
-    }
+    var config: String = loadConfigTemplate()
 
     fun reset() {
         config = loadConfigTemplate()
@@ -31,44 +19,19 @@ class XMRigConfigBuilder(val context: Context) {
     fun getConfigPath(): String = "${context.filesDir.absolutePath}/config.json"
 
     fun loadConfigTemplate(): String {
-        return try {
-            val buf = StringBuilder()
-            val json = this.context.assets?.open("config.json")
-            val inStream = BufferedReader(InputStreamReader(json, "UTF-8"))
-            var str: String?
-            while (inStream.readLine().also { str = it } != null) {
-                buf.append(str)
-            }
-            inStream.close()
-            buf.toString()
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
-        finally {
+        return context.assets.open("config.json").bufferedReader(StandardCharsets.UTF_8).use { reader ->
+            reader.readText()
         }
     }
 
     fun readConfigFromDisk(): String {
-        return try {
-            val buf = StringBuilder()
-            val file = File(getConfigPath())
-            val inStream = file.bufferedReader()
-            var str: String?
-            while (inStream.readLine().also { str = it } != null) {
-                buf.append(str)
-            }
-            inStream.close()
-            buf.toString()
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
-        finally {
-        }
+        return File(getConfigPath()).readText(StandardCharsets.UTF_8)
     }
 
     fun setConfiguration(data: Configuration) {
-        val configByte = Base64.decode(data.config, Base64.DEFAULT)
-        config = String(configByte, Charset.defaultCharset())
+        val encoded = data.config ?: throw IllegalArgumentException("Missing XMRig config payload")
+        val configByte = Base64.decode(encoded, Base64.DEFAULT)
+        config = String(configByte, StandardCharsets.UTF_8)
     }
 
     fun getConfigString(): String {
@@ -77,25 +40,13 @@ class XMRigConfigBuilder(val context: Context) {
 
     fun writeConfig(configContent: String? = null, customPath: String? = null): String {
         val privatePath = customPath ?: context.filesDir.absolutePath
-
-        val f = File("$privatePath/config.json")
-        Log.d(this.javaClass.name, "Write to $f")
-        Log.d(this.javaClass.name, config)
-        var writer: PrintWriter? = null
-
+        val file = File("$privatePath/config.json")
+        Log.d(this.javaClass.name, "Write to $file")
         try {
-            writer = PrintWriter(FileOutputStream(f))
-            if (configContent != null) {
-                writer.write(configContent)
-            } else {
-                writer.write(config)
-            }
+            file.writeText(configContent ?: config, StandardCharsets.UTF_8)
         } catch (e: IOException) {
             throw RuntimeException(e)
-        } finally {
-            writer?.close()
         }
-        return f.absoluteFile.toString()
+        return file.absolutePath
     }
-
 }

@@ -1,258 +1,136 @@
 import { merge } from 'lodash/fp';
 import React from 'react';
-import {
-  Button,
-  Card, Colors, Incubator, SkeletonView, Switch, Text, View,
-} from 'react-native-ui-lib';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { EditSimpleCardProps } from './index';
 import {
   hostnameValidator, passwordValidator, poolValidator, portValidator, usernameValidator,
 } from '../../../../../core/utils/validators';
 import { IConfiguratioPropertiesPool } from '../../../../../core/settings/settings.interface';
 import PoolListModal from '../../../modals/pool-list.modal';
+import {
+  Button, FormField, Section, ToggleRow,
+} from '../../../../core/ui';
 
 export const EditSimplePoolCard: React.FC<EditSimpleCardProps> = (
   { setLocalState, localState },
 ) => {
-  const [valid, setValid] = React.useState<boolean>(
-    poolValidator.validate(localState.properties?.pool || {}).error == null,
-  );
-
-  React.useEffect(() => {
-    setValid(
-      poolValidator.validate(localState.properties?.pool || {}).error == null,
-    );
-  }, [localState.properties]);
-
+  const pool = localState.properties?.pool;
+  const valid = poolValidator.validate(pool || {}).error == null;
   const [showPoolListDialog, setShowPoolListDialog] = React.useState<boolean>(false);
+
+  const updatePool = (value: Partial<IConfiguratioPropertiesPool>) => setLocalState(
+    (oldState) => merge(oldState, { properties: { pool: value } }),
+  );
 
   return (
     <>
       <PoolListModal
-        onAdd={(pool: IConfiguratioPropertiesPool) => {
-          setLocalState((oldState) => merge(
-            oldState,
-            {
-              properties: {
-                pool,
-              },
-            },
-          ));
-        }}
+        onAdd={(preset: IConfiguratioPropertiesPool) => updatePool(preset)}
         onDismiss={() => setShowPoolListDialog(false)}
         visible={showPoolListDialog}
       />
-      <Card
-        enableShadow
-        selected={!valid}
-        selectionOptions={{
-          hideIndicator: true,
-          color: Colors.$outlineDanger,
-        }}
+      <Section
+        title="Pool"
+        description="Where your miner connects and gets paid."
+        invalid={!valid}
+        action={(
+          <Button
+            label="Presets"
+            size="sm"
+            variant="secondary"
+            onPress={() => setShowPoolListDialog(true)}
+          />
+        )}
       >
-        <View centerV spread padding-20 paddingB-5>
-          <View row centerV>
-            <Card.Section
-              style={{ flexShrink: 1 }}
-              content={[
-                { text: 'Pool', text65: true, $textDefault: true },
-                { text: 'Pools connection details provided by the pool. We provide presets for some popular pools.', text90: true, $textNeutral: true },
-              ]}
+        <View style={styles.row}>
+          <View style={styles.host}>
+            <FormField
+              label="Hostname"
+              placeholder="pool.domain.tld"
+              value={pool?.hostname}
+              onChangeText={(text) => updatePool({ hostname: text })}
+              validate={(value?: string) => hostnameValidator.validate(value).error == null}
+              validationMessage={hostnameValidator.validate(pool?.hostname).error?.message}
+              validateOnChange
+              enableErrors
+              maxLength={128}
+              keyboardType="url"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
-            <View paddingL-10>
-              <Button size={Button.sizes.small} label="Presets" onPress={() => setShowPoolListDialog(true)} />
-            </View>
           </View>
-        </View>
-        <View spread padding-20 paddingT-10>
-          <View flex row>
-            <View flex-2 marginR-20>
-              <Incubator.TextField
-                placeholder="Hostname / IP"
-                floatingPlaceholder
-                value={localState.properties?.pool?.hostname}
-                onChangeText={(text) => setLocalState((oldState) => merge(
-                  oldState,
-                  {
-                    properties: {
-                      pool: {
-                        hostname: text,
-                      },
-                    },
-                  },
-                ))}
-                validate={
-                  (value: string) => hostnameValidator
-                    .validate(value)
-                    .error == null
-                }
-                validationMessage={
-                  hostnameValidator
-                    .validate(localState.properties?.pool?.hostname)
-                    .error?.message
-                }
-                validateOnChange
-                enableErrors
-                floatOnFocus
-                showCharCounter
-                maxLength={128}
-                fieldStyle={styles.withUnderline}
-                hint="pool.domain.tld"
-                keyboardType="url"
-              />
-            </View>
-            <View flex-1>
-              <Incubator.TextField
-                placeholder="Port"
-                floatingPlaceholder
-                value={localState.properties?.pool?.port?.toString() || ''}
-                onChangeText={(text) => setLocalState((oldState) => merge(
-                  oldState,
-                  {
-                    properties: {
-                      pool: {
-                        port: text,
-                      },
-                    },
-                  },
-                ))}
-                validate={
-                  (value: string) => portValidator
-                    .validate(value)
-                    .error == null
-                }
-                validationMessage={
-                  portValidator
-                    .validate(localState.properties?.pool?.port)
-                    .error?.message
-                }
-                validateOnChange
-                enableErrors
-                floatOnFocus
-                showCharCounter
-                maxLength={5}
-                fieldStyle={styles.withUnderline}
-                hint="80"
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-          <Incubator.TextField
-            placeholder="Username"
-            floatingPlaceholder
-            value={localState.properties?.pool?.username}
-            onChangeText={(text) => setLocalState((oldState) => merge(
-              oldState,
-              {
-                properties: {
-                  pool: {
-                    username: text,
-                  },
-                },
-              },
-            ))}
-            validate={
-              (value: string) => usernameValidator
-                .validate(value)
-                .error == null
-            }
-            validationMessage={
-              usernameValidator
-                .validate(localState.properties?.pool?.username)
-                .error?.message
-            }
-            validateOnChange
-            enableErrors
-            floatOnFocus
-            showCharCounter
-            maxLength={128}
-            fieldStyle={styles.withUnderline}
-            hint="Mostly used for wallet"
-          />
-          <Incubator.TextField
-            placeholder="Password"
-            floatingPlaceholder
-            value={localState.properties?.pool?.password}
-            onChangeText={(text) => setLocalState((oldState) => merge(
-              oldState,
-              {
-                properties: {
-                  pool: {
-                    password: text,
-                  },
-                },
-              },
-            ))}
-            validate={
-              (value: string) => passwordValidator
-                .validate(value)
-                .error == null
-            }
-            validationMessage={
-              passwordValidator
-                .validate(localState.properties?.pool?.password)
-                .error?.message
-            }
-            validateOnChange
-            enableErrors
-            floatOnFocus
-            showCharCounter
-            maxLength={128}
-            fieldStyle={styles.withUnderline}
-          />
-          <View row flex paddingT-20>
-            <Text text80 $textNeutralLight flex column>SSL</Text>
-            <Switch
-              value={localState.properties?.pool?.sslEnabled}
-              onValueChange={(value) => setLocalState((oldState) => merge(
-                oldState,
-                {
-                  properties: {
-                    pool: {
-                      sslEnabled: value,
-                    },
-                  },
-                },
-              ))}
+          <View style={styles.port}>
+            <FormField
+              label="Port"
+              placeholder="3333"
+              value={pool?.port?.toString() || ''}
+              onChangeText={(text) => updatePool({
+                port: text.trim() === '' ? undefined : Number(text),
+              })}
+              validate={(value?: string) => portValidator
+                .validate(value === '' ? undefined : Number(value)).error == null}
+              validationMessage={portValidator.validate(pool?.port).error?.message}
+              validateOnChange
+              enableErrors
+              maxLength={5}
+              keyboardType="numeric"
             />
           </View>
         </View>
-      </Card>
+        <FormField
+          label="Wallet / username"
+          placeholder="Your wallet address"
+          value={pool?.username}
+          onChangeText={(text) => updatePool({ username: text })}
+          validate={(value?: string) => usernameValidator.validate(value).error == null}
+          validationMessage={usernameValidator.validate(pool?.username).error?.message}
+          validateOnChange
+          enableErrors
+          maxLength={128}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <FormField
+          label="Password / worker"
+          placeholder="x"
+          value={pool?.password}
+          onChangeText={(text) => updatePool({ password: text })}
+          validate={(value?: string) => passwordValidator.validate(value).error == null}
+          validationMessage={passwordValidator.validate(pool?.password).error?.message}
+          validateOnChange
+          enableErrors
+          maxLength={128}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <View style={styles.toggle}>
+          <ToggleRow
+            first
+            label="Use SSL / TLS"
+            description="Only if your pool supports it on this port."
+            value={!!pool?.sslEnabled}
+            onValueChange={(value) => updatePool({ sslEnabled: value })}
+          />
+        </View>
+      </Section>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  withUnderline: {
-    borderBottomWidth: 1,
-    borderColor: Colors.$outlineDisabled,
-    paddingBottom: 4,
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  host: {
+    flex: 2.2,
+  },
+  port: {
+    flex: 1,
+  },
+  toggle: {
+    marginTop: 8,
   },
 });
 
-const EditSimplePoolCardSkeleton: React.FC<EditSimpleCardProps> = (props) => {
-  const [loaded, setLoaded] = React.useState<boolean>(false);
-  React.useEffect(() => {
-    const interval = setTimeout(() => setLoaded(true), 500);
-    return () => {
-      clearTimeout(interval);
-      setLoaded(false);
-    };
-  }, []);
-
-  return (
-    <SkeletonView
-      template={SkeletonView.templates.TEXT_CONTENT}
-      customValue={props}
-      showContent={loaded}
-      renderContent={
-        // eslint-disable-next-line react/jsx-props-no-spreading
-        (customProps: EditSimpleCardProps) => (<EditSimplePoolCard {...customProps} />)
-      }
-      times={3}
-    />
-  );
-};
-
-export default EditSimplePoolCardSkeleton;
+export default EditSimplePoolCard;

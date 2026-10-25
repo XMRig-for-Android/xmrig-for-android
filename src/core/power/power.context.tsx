@@ -13,19 +13,21 @@ type PowerContextType = {
 // @ts-ignore
 export const PowerContext:React.Context<PowerContextType> = React.createContext();
 
-export const PowerContextProvider:React.FC = ({ children }) => {
+export const PowerContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [batteryLevel, setBatteryLevel] = React.useState<number>(0);
   const [isLowBattery, setIsLowBattery] = React.useState<boolean>(false);
   const [isPowerConnected, setIsPowerConnected] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    const MinerEmitter = new NativeEventEmitter(XMRigForAndroid);
+    const MinerEmitter = new NativeEventEmitter<{
+      onPower: [PowerEvent];
+    }>(XMRigForAndroid);
 
-    const onPowerEventSub:EmitterSubscription = MinerEmitter.addListener('onPower', (event: PowerEvent) => {
+    const onPowerEventSub:EmitterSubscription = MinerEmitter.addListener('onPower', (event) => {
       console.log(event);
       switch (event.action) {
         case PowerEventAction.BATTERY_CHANGED:
-          if (event.value) {
+          if (event.value != null) {
             setBatteryLevel(event.value);
           }
           break;

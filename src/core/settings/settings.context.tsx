@@ -63,11 +63,9 @@ export const defaultSimpleConfiguration: Partial<ISimpleConfiguration> = {
     algos: {
       ...defaultAlgorithems,
       'cn/gpu': false,
-      'cn-heavy': false,
       'cn-heavy/0': false,
       'cn-heavy/tube': false,
       'cn-heavy/xhv': false,
-      astrobwt: false,
       panthera: false,
     },
     algo_perf: {},
@@ -82,7 +80,7 @@ type SettingsContextProps = {
 // @ts-ignore
 export const SettingsContext:Context<SettingsContextProps> = createContext();
 
-export const SettingsContextProvider:React.FC = ({ children }) => {
+export const SettingsContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [settings, settingsDispatcher] = useReducer(SettingsReducer, initialState);
   const [asyncLoaderState, setAsyncLoaderState] = useState<boolean>(false);
 

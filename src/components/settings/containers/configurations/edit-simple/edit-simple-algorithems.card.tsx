@@ -1,107 +1,109 @@
-import { merge } from 'lodash/fp';
+import { isEqual, merge } from 'lodash/fp';
 import React from 'react';
 import {
-  Card, Colors, GridView, SkeletonView, Switch, Text, View,
-} from 'react-native-ui-lib';
-import { Dimensions, ScaledSize } from 'react-native';
-import { Algorithems, Algorithm } from '../../../../../core/settings/settings.interface';
+  Pressable, StyleSheet, Text, View,
+} from 'react-native';
+import {
+  Algorithems, Algorithm, MoneroOceanOnlyAlgorithms, XMRigFork,
+} from '../../../../../core/settings/settings.interface';
 import { EditSimpleCardProps } from './index';
+import { palette } from '../../../../../core/theme';
+import { Button, Section } from '../../../../core/ui';
 
-const screen = Dimensions.get('screen');
+const allAlgorithms = [...Algorithems].sort();
+const originalAlgorithms = allAlgorithms.filter(
+  (item) => !MoneroOceanOnlyAlgorithms.includes(item),
+);
 
-export const EditSimpleAlgorithemsCard: React.FC<EditSimpleCardProps> = (
+const EditSimpleAlgorithemsCardBase: React.FC<EditSimpleCardProps> = (
   { setLocalState, localState },
 ) => {
-  const [dimensions, setDimensions] = React.useState<ScaledSize>({
-    ...screen,
-    width: screen.width - 20,
-  });
+  const sortedAlgorithms = localState.xmrig_fork === XMRigFork.MONEROOCEAN
+    ? allAlgorithms : originalAlgorithms;
+  const algos = localState.properties?.algos;
+  const isEnabled = (item: Algorithm) => (algos ? algos[item] !== false : true);
+  const enabledCount = sortedAlgorithms.filter(isEnabled).length;
+  const allEnabled = enabledCount === sortedAlgorithms.length;
 
-  React.useEffect(() => {
-    const subscription = Dimensions.addEventListener(
-      'change',
-      ({ screen: _screen }) => {
-        setDimensions({
-          ..._screen,
-          width: _screen.width - 20,
-        });
-      },
-    );
-    return () => subscription?.remove();
-  });
-
-  const renderItem = React.useCallback((item: Algorithm) => (
-    <View marginB-5 key={`algo-${item}`} style={{ borderBottomWidth: 1, borderColor: Colors.$outlineDisabled }} marginR-10 paddingB-10>
-      <View row flex>
-        <Text text90 $textNeutralLight flex column marginB-5>{item}</Text>
-        <Switch
-          value={localState.properties?.algos ? localState.properties?.algos[item] : true}
-          onValueChange={(value) => setLocalState((oldState) => merge(
-            oldState,
-            {
-              properties: {
-                algos: {
-                  [`${item}`]: value,
-                },
-              },
-            },
-          ))}
-        />
-      </View>
-    </View>
-  ), [localState.properties]);
-
-  return React.useMemo(() => (
-    <Card
-      enableShadow
-    >
-      <View centerV spread padding-20 paddingB-5>
-        <Card.Section
-          style={{ flexShrink: 1 }}
-          content={[
-            { text: 'Algorithems', text65: true, $textDefault: true },
-            { text: 'Enable/Disable miner supported algorithems, some of the algorithems can casue problems on some devices. If the miner is stuck/crash on some algorithem you can disable these algorithem.', text90: true, $textNeutral: true },
-          ]}
-        />
-      </View>
-      <View spread padding-20 paddingT-10>
-        <GridView
-          numColumns={2}
-          viewWidth={dimensions.width - 20}
-          itemSpacing={10}
-          items={
-          Algorithems.sort().map((item) => ({
-            renderCustomItem: () => renderItem(item),
-          }))
-        }
-        />
-      </View>
-    </Card>
-  ), [dimensions.width, Algorithems, localState.properties?.algos]);
-};
-
-const EditSimpleAlgorithemsCardSkeleton: React.FC<EditSimpleCardProps> = (props) => {
-  const [loaded, setLoaded] = React.useState<boolean>(false);
-  React.useEffect(() => {
-    const interval = setTimeout(() => setLoaded(true), 800);
-    return () => {
-      clearTimeout(interval);
-      setLoaded(false);
-    };
-  }, []);
+  const setAll = (value: boolean) => setLocalState((oldState) => merge(oldState, {
+    properties: {
+      algos: Object.fromEntries(sortedAlgorithms.map((item) => [item, value])),
+    },
+  }));
 
   return (
-    <SkeletonView
-      template={SkeletonView.templates.TEXT_CONTENT}
-      customValue={props}
-      showContent={loaded}
-      renderContent={
-        // eslint-disable-next-line react/jsx-props-no-spreading
-        (customProps: EditSimpleCardProps) => (<EditSimpleAlgorithemsCard {...customProps} />)
-      }
-      times={5}
-    />
+    <Section
+      title="Algorithms"
+      description={`${enabledCount} of ${sortedAlgorithms.length} enabled. Turn off any that crash or stall on this device.`}
+      action={(
+        <Button
+          label={allEnabled ? 'Disable all' : 'Enable all'}
+          size="sm"
+          variant="ghost"
+          onPress={() => setAll(!allEnabled)}
+        />
+      )}
+    >
+      <View style={styles.chips}>
+        {sortedAlgorithms.map((item) => {
+          const enabled = isEnabled(item);
+          return (
+            <Pressable
+              key={item}
+              onPress={() => setLocalState((oldState) => merge(oldState, {
+                properties: { algos: { [item]: !enabled } },
+              }))}
+              style={[styles.chip, enabled ? styles.chipOn : styles.chipOff]}
+            >
+              <Text style={[styles.chipText, enabled ? styles.chipTextOn : styles.chipTextOff]}>
+                {item}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </Section>
   );
 };
 
-export default EditSimpleAlgorithemsCardSkeleton;
+export const EditSimpleAlgorithemsCard = React.memo(
+  EditSimpleAlgorithemsCardBase,
+  (prev, next) => isEqual(prev.localState.properties?.algos, next.localState.properties?.algos)
+    && prev.localState.xmrig_fork === next.localState.xmrig_fork,
+);
+
+const styles = StyleSheet.create({
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  chip: {
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  chipOn: {
+    backgroundColor: palette.accentSoft,
+    borderColor: palette.accentSoft,
+  },
+  chipOff: {
+    backgroundColor: palette.surface,
+    borderColor: palette.track,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  chipTextOn: {
+    color: palette.accent,
+  },
+  chipTextOff: {
+    color: palette.inkSubtle,
+    textDecorationLine: 'line-through',
+  },
+});
+
+export default EditSimpleAlgorithemsCard;

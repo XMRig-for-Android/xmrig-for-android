@@ -1,146 +1,139 @@
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React from 'react';
 import {
-  StyleSheet, FlatList,
+  Pressable, StyleSheet, Text, View,
 } from 'react-native';
-import { merge } from 'lodash/fp';
+import { RootStackParamList } from '../../../../core/navigation';
 import {
-  Card, ListItem, Text, View, ViewProps, Checkbox, Colors,
-} from 'react-native-ui-lib';
-import _ from 'lodash';
-import { Configuration } from '../../../../core/settings/settings.interface';
+  Configuration, ConfigurationMode, ISimpleConfiguration, XMRigFork,
+} from '../../../../core/settings/settings.interface';
+import { palette, radius, shadow } from '../../../../core/theme';
+import { Badge, Button } from '../../../core/ui';
 
-type ConfigurationsListViewProps = ViewProps & {
-    configurations: Configuration[];
-    onSelected: (ids: string[]) => void;
+type ConfigurationsListViewProps = {
+  configurations: Configuration[];
+  activeId?: string;
+  onActivate: (id: string) => void;
 };
 
-export const ConfigurationsListView:React.FC<ConfigurationsListViewProps> = ({
-  configurations = [],
-  onSelected,
-}) => {
-  const navigation = useNavigation();
-  const [selected, setSelected] = React.useState<string[]>([]);
+const poolSummary = (configuration: Configuration): string => {
+  if (configuration.mode === ConfigurationMode.ADVANCE) {
+    return 'Custom JSON config';
+  }
+  const pool = (configuration as ISimpleConfiguration).properties?.pool;
+  if (!pool?.hostname) {
+    return 'No pool configured';
+  }
+  return pool.port ? `${pool.hostname}:${pool.port}` : pool.hostname;
+};
 
-  React.useEffect(() => onSelected(selected), [selected]);
+export const ConfigurationsListView: React.FC<ConfigurationsListViewProps> = ({
+  configurations,
+  activeId,
+  onActivate,
+}) => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   return (
-    <Card
-      enableShadow
-      flex
-    >
-      <View>
-        <FlatList
-          data={configurations}
-          renderItem={({ item }) => (
-            <View>
-              <ListItem
-                onPress={() => navigation.navigate('Configuration' as never, { id: item.id } as never)}
-              >
-                <ListItem.Part marginH-10 containerStyle={merge(styles.border, { flexGrow: 1 })}>
-                  <ListItem.Part column containerStyle={{ flexGrow: 1 }}>
-                    <Text row grey10 text65 numberOfLines={1}>
-                      {item.name}
-                    </Text>
-                    <Text row $textNeutralLight text90 numberOfLines={1}>
-                      {_.capitalize(item.mode)}
-                      {' '}
-                      Mode
-                    </Text>
-                  </ListItem.Part>
-                  <ListItem.Part column right>
-                    <Checkbox
-                      color={
-                        selected.includes(item.id as string)
-                          ? Colors.$backgroundDangerHeavy : Colors.$backgroundPrimaryHeavy
-                      }
-                      value={selected.includes(item.id as string)}
-                      onValueChange={() => {
-                        if (selected.includes(item.id as string)) {
-                          setSelected((oldVal) => oldVal.filter((v) => v !== item.id));
-                        } else {
-                          setSelected((oldVal) => [...oldVal, item.id as string]);
-                        }
-                      }}
-                    />
-                  </ListItem.Part>
-                </ListItem.Part>
-              </ListItem>
-            </View>
-          )}
-          keyExtractor={(item: Configuration) => `configution-${item.id}`}
-        />
-      </View>
-    </Card>
-  );
-
-  /* return (
-    <Card style={styles.card}>
-      <Card.Content style={{ flex: 1, paddingHorizontal: 10, paddingVertical: 5 }}>
-        <ScrollView>
-          {configurations.map((item) => (
-            <List.Item
-              key={`key-${item.id}`}
-              style={{ paddingHorizontal: 0 }}
-              title={item.name}
-              description={`${item.mode} mode`.toUpperCase()}
-              onPress={() => {
-                navigation.navigate('Configuration' as never, { id: item.id } as never);
-              }}
-              right={() => <ListRightCheckbox item={item} />}
-            />
-          ))}
-        </ScrollView>
-
-        {selected.length > 0 && (
-        <Card.Actions>
-          <Button
-            icon="delete"
-            mode="contained"
-            color={Colors.deepOrange900}
-            onPress={() => {
-              onDelete([...selected]);
-              setSelected([]);
-            }}
+    <View style={styles.list}>
+      {configurations.map((item) => {
+        const active = item.id === activeId;
+        return (
+          <Pressable
+            key={item.id}
+            onPress={() => navigation.navigate('Configuration', { id: item.id })}
+            style={({ pressed }) => [styles.card, active && styles.cardActive, pressed && styles.pressed]}
           >
-            Delete
-            {' '}
-            {selected.length}
-            {' '}
-            Selected
-          </Button>
-        </Card.Actions>
-        )}
-      </Card.Content>
-    </Card>
-  ); */
+            <View style={styles.cardBody}>
+              <View style={styles.titleRow}>
+                <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+                {active ? <Badge label="Active" tone="success" /> : null}
+              </View>
+              <Text style={styles.pool} numberOfLines={1}>{poolSummary(item)}</Text>
+              <View style={styles.badges}>
+                <Badge
+                  label={item.mode === ConfigurationMode.ADVANCE ? 'Advanced' : 'Simple'}
+                  tone="accent"
+                />
+                <Badge
+                  label={item.xmrig_fork === XMRigFork.MONEROOCEAN ? 'MoneroOcean' : 'XMRig'}
+                  tone="neutral"
+                />
+              </View>
+            </View>
+            <View style={styles.cardSide}>
+              {!active ? (
+                <Button
+                  label="Use"
+                  size="sm"
+                  variant="secondary"
+                  onPress={() => onActivate(item.id as string)}
+                />
+              ) : null}
+              <Text style={styles.chevron}>›</Text>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-  border: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.grey50,
-  },
-  row: {
-    flexDirection: 'row',
-    marginVertical: 10,
-    justifyContent: 'space-between',
-  },
-  listSection: {
-    flex: 1,
-    marginBottom: 0,
+  list: {
+    gap: 12,
   },
   card: {
-    margin: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: palette.hairline,
+    padding: 18,
+    ...shadow(1),
+  },
+  cardActive: {
+    borderColor: palette.success,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+  cardBody: {
     flex: 1,
   },
-  title: {
-    margin: 10,
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  input: {
-    marginVertical: 10,
+  name: {
+    flexShrink: 1,
+    fontSize: 17,
+    fontWeight: '700',
+    color: palette.ink,
+    letterSpacing: -0.3,
   },
-  topActionButton: {
-    marginRight: 10,
+  pool: {
+    marginTop: 4,
+    fontSize: 13,
+    color: palette.inkMuted,
+  },
+  badges: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 12,
+  },
+  cardSide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginLeft: 12,
+  },
+  chevron: {
+    fontSize: 26,
+    lineHeight: 28,
+    color: palette.inkSubtle,
+    fontWeight: '300',
   },
 });

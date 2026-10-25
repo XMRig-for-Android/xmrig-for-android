@@ -9,21 +9,25 @@ export const ToasterContext = React.createContext<ToasterContextProps>({
   addToast: () => {},
 });
 
-export const ToasterProvider: React.FC = ({ children }) => {
+export const ToasterProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [toasts, setToasts] = React.useState<Incubator.ToastProps[]>([]);
 
+  const currentToast = toasts[0];
   const RenderToasts = React.useCallback(() => (
-    // eslint-disable-next-line react/jsx-props-no-spreading
-    <Incubator.Toast key={`t-${Math.random()}`} {...toasts[0]} visible style={{ borderWidth: 2, borderColor: Colors.$outlineNeutral }} />
-  ), [toasts]);
+    <Incubator.Toast
+      key={currentToast?.message || 'toast'}
+      // eslint-disable-next-line react/jsx-props-no-spreading
+      {...currentToast}
+      visible
+      style={{ borderWidth: 2, borderColor: Colors.$outlineNeutral }}
+    />
+  ), [currentToast]);
 
   const handlers = (toast: Incubator.ToastProps): Incubator.ToastProps => ({
     ...toast,
     autoDismiss: 3000,
     visible: false,
-    onDismiss: () => setToasts((prevState) => [
-      ...prevState.filter((item) => item.message !== toast.message),
-    ]),
+    onDismiss: () => setToasts((prevState) => prevState.slice(1)),
   });
   const addToast = (props: Incubator.ToastProps) => setToasts(
     (prevState) => [...prevState, handlers(props)],

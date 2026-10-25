@@ -5,26 +5,33 @@ import android.content.Intent
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
-import androidx.work.*
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.xmrigforandroid.workers.ThermalWorker
 
 class ThermalService : Service() {
 
-    val thermalWorkRequest: OneTimeWorkRequest.Builder = OneTimeWorkRequestBuilder<ThermalWorker>()
+    private val thermalWorkRequest = OneTimeWorkRequestBuilder<ThermalWorker>()
 
-    val updateTimer = object: CountDownTimer(15000, 15000) {
+    private val updateTimer = object : CountDownTimer(15000, 15000) {
         override fun onTick(millisUntilFinished: Long) {
         }
 
         override fun onFinish() {
-            Log.d(ThermalService.LOG_TAG, "updateTimer")
+            Log.d(LOG_TAG, "updateTimer")
             WorkManager.getInstance(applicationContext).enqueue(thermalWorkRequest.build())
             this.start()
         }
     }
 
-    init {
+    override fun onCreate() {
+        super.onCreate()
         updateTimer.start()
+    }
+
+    override fun onDestroy() {
+        updateTimer.cancel()
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -32,7 +39,6 @@ class ThermalService : Service() {
     }
 
     companion object {
-        private val LOG_TAG = "ThermalService"
-        var IS_SERVICE_RUNNING = false
+        private const val LOG_TAG = "ThermalService"
     }
 }

@@ -11,9 +11,11 @@ export const useMinerStatus = () => {
   const [isWorkingState, setIsWorkingState] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    const MinerEmitter = new NativeEventEmitter(XMRigForAndroid);
+    const MinerEmitter = new NativeEventEmitter<{
+      onStatusChange: [IMinerStatusChangeEvent];
+    }>(XMRigForAndroid);
 
-    const onStatusChangeSub:EmitterSubscription = MinerEmitter.addListener('onStatusChange', (event: IMinerStatusChangeEvent) => {
+    const onStatusChangeSub:EmitterSubscription = MinerEmitter.addListener('onStatusChange', (event) => {
       setIsWorkingState(event.isWorking);
     });
 
