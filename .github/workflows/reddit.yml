@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  test:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: bluwy/release-for-reddit-action@v1

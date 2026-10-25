@@ -1,16 +1,16 @@
+name: Create Issue Branch
+
 on:
-  # The issue_comment event below is only needed for the ChatOps mode,
-  # you can remove it otherwise
   issue_comment:
-    types: [ created ]
+    types: [created]
   pull_request:
-    types: [ closed ]
+    types: [closed]
 
 jobs:
   create_issue_branch_job:
     runs-on: ubuntu-latest
     steps:
       - name: Create Issue Branch
-        uses: robvanderleek/create-issue-branch@main
+        uses: robvanderleek/create-issue-branch@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

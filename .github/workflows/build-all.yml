@@ -1,108 +1,103 @@
 name: BuildAll
 
-#on: workflow_dispatch
-
 on:
   pull_request:
     types: [closed]
     branches:
       - main
+  workflow_dispatch:
 
-#on:
-#  push:
-#    tags:
-#      - '*'
-      
 jobs:
   build:
-
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-        architecture: 'x64'
-    - uses: nttld/setup-ndk@v1.0.6
-      with:
-        ndk-version: 27.0.12077973
-    - uses: actions/checkout@v2
-    
-    - name: Get version
-      uses: KageKirin/get-node-package-version@v0
-      id: package_version
-    
-    - name: Set up JDK 23
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '23'
-        cache: 'gradle'
-        
-    - uses: actions/setup-node@v2
-      with:
-        node-version: '22.17.0'
-        cache: 'yarn'
-        
-    - name: Bump version
-      id: bump_version
-      uses: oflynned/Android-Semantic-Release@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-    - run: yarn
-    - run: node update_version.js
-    
-    - name: Build XMRig, libUV, OpenSSL & hwloc
-      run: make -C xmrig/lib-builder all
-        
-    - run: yarn
-    - run: cd android && ./gradlew bundleRelease && cd ..
-    
-    - name: install bundletool
-      uses: enniel/bundletool-runner@v1.1.0
-    
-    - run: java -jar /home/runner/bundletool/bundletool.jar build-apks --mode=universal --bundle=./android/app/build/outputs/bundle/release/app-release.aab --output=./android/app/build/outputs/bundle/release/app-release.apks
-    - run: mv ./android/app/build/outputs/bundle/release/app-release.apks ./android/app/build/outputs/bundle/release/app-release-apk.zip
-    - run: unzip ./android/app/build/outputs/bundle/release/app-release-apk.zip
-    - run: mv universal.apk ./android/app/build/outputs/bundle/release/app-release.apk
-    - run: rm ./android/app/build/outputs/bundle/release/app-release-apk.zip
-    - run: mv ./android/app/build/outputs/bundle/release/app-release.apk ./android/app/build/outputs/bundle/release/xmrig-for-android_v${{ steps.bump_version.outputs.new_tag }}.apk
-    - run: mv ./android/app/build/outputs/bundle/release/app-release.aab ./android/app/build/outputs/bundle/release/xmrig-for-android_v${{ steps.bump_version.outputs.new_tag }}.aab
-    
-    - name: Sign app APK
-      uses: r0adkll/sign-android-release@v1
-      # ID used to access action output
-      id: sign_app
-      with:
-        releaseDirectory: ./android/app/build/outputs/bundle/release
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-      env:
-        BUILD_TOOLS_VERSION: "30.0.2"
-        
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: true
-        automatic_release_tag: ${{ steps.bump_version.outputs.new_tag }}
-        title: ${{ steps.bump_version.outputs.new_tag }}
-        files: |
-          ./android/app/build/outputs/bundle/release/*.apk
-          ./android/app/build/outputs/bundle/release/*.aab
-        
-    #- name: Install hub
-    #  uses: geertvdc/setup-hub@master
-    #  env:
-    #    ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-    
-    #- name: run hub commands
-    #  env:
-    #    GITHUB_USER: ${{ secrets.USER }}
-    #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #  run: |
-    #       hub release edit -dp -a ./android/app/build/outputs/bundle/release/xmrig-for-android_v${GITHUB_REF##*/}-signed.apk -a ./android/app/build/outputs/bundle/release/xmrig-for-android_v${GITHUB_REF##*/}.apk -a ./android/app/build/outputs/bundle/release/xmrig-for-android_v${GITHUB_REF##*/}.aab -m "${GITHUB_REF##*/}" ${GITHUB_REF##*/}
-      
-      
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '23'
+          cache: gradle
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - uses: nttld/setup-ndk@v1.0.6
+        with:
+          ndk-version: 27.1.12297006
+
+      - name: Install Android SDK packages
+        run: |
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses || true
+          "$SDKMANAGER" \
+            "platforms;android-37" \
+            "build-tools;37.0.0" \
+            "cmake;3.22.1"
+
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y autoconf automake libtool
+
+      - name: Get version
+        uses: KageKirin/get-node-package-version@v0
+        id: package_version
+
+      - name: Bump version
+        id: bump_version
+        uses: oflynned/Android-Semantic-Release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: yarn install --immutable
+      - run: node update_version.js
+
+      - name: Build XMRig, libUV, OpenSSL & hwloc
+        run: make -C xmrig/lib-builder all
+
+      - name: Build release bundle
+        run: cd android && ./gradlew bundleRelease
+
+      - name: install bundletool
+        uses: enniel/bundletool-runner@v1.1.0
+
+      - run: java -jar /home/runner/bundletool/bundletool.jar build-apks --mode=universal --bundle=./android/app/build/outputs/bundle/release/app-release.aab --output=./android/app/build/outputs/bundle/release/app-release.apks
+      - run: mv ./android/app/build/outputs/bundle/release/app-release.apks ./android/app/build/outputs/bundle/release/app-release-apk.zip
+      - run: unzip ./android/app/build/outputs/bundle/release/app-release-apk.zip
+      - run: mv universal.apk ./android/app/build/outputs/bundle/release/app-release.apk
+      - run: rm ./android/app/build/outputs/bundle/release/app-release-apk.zip
+      - run: mv ./android/app/build/outputs/bundle/release/app-release.apk ./android/app/build/outputs/bundle/release/xmrig-for-android_v${{ steps.bump_version.outputs.new_tag }}.apk
+      - run: mv ./android/app/build/outputs/bundle/release/app-release.aab ./android/app/build/outputs/bundle/release/xmrig-for-android_v${{ steps.bump_version.outputs.new_tag }}.aab
+
+      - name: Sign app APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: ./android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "37.0.0"
+
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: true
+          automatic_release_tag: ${{ steps.bump_version.outputs.new_tag }}
+          title: ${{ steps.bump_version.outputs.new_tag }}
+          files: |
+            ./android/app/build/outputs/bundle/release/*.apk
+            ./android/app/build/outputs/bundle/release/*.aab
